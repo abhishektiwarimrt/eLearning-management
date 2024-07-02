@@ -1,4 +1,6 @@
 ﻿global using Carter;
+global using FluentValidation;
+global using lms.buildingblocks.Behaviors;
 global using lms.buildingblocks.CQRS;
 global using lms.usermanagement.api.Exceptions;
 global using lms.usermanagement.api.Models;

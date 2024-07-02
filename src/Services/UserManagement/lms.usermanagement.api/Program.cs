@@ -1,6 +1,7 @@
-using FluentValidation;
-using lms.buildingblocks.Behaviors;
 
+
+
+using lms.buildingblocks.Exceptions.Handler;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,9 +21,13 @@ builder.Services.AddMarten(opts =>
     opts.Connection(builder.Configuration.GetConnectionString("Database"));
 }).UseLightweightSessions();
 
+builder.Services.AddExceptionHandler<CustomExceptionHandler>();
+
 var app = builder.Build();
 
 // Configure the HTTP resquest pipeline
 app.MapCarter();
+
+app.UseExceptionHandler(options => { });
 
 app.Run();
