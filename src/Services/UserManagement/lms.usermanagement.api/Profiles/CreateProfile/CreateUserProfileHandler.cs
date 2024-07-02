@@ -5,7 +5,7 @@ using FluentValidation;
 namespace lms.usermanagement.api.Profiles.CreateProfile
 {
     public record CreateUserProfileCommand(string FirstName, string LastName, string Title, string Address, string City, string Country)
-    : IRequest<CreateUserProfileResult>;
+    : ICommand<CreateUserProfileResult>;
     public record CreateUserProfileResult(Guid Id);
 
     public class CreateUserProfileCommandValidator : AbstractValidator<CreateUserProfileCommand>
@@ -17,19 +17,11 @@ namespace lms.usermanagement.api.Profiles.CreateProfile
         }
     }
 
-    internal class CreateUserProfileCommandHandler(IDocumentSession session, IValidator<CreateUserProfileCommand> validator)
-        : IRequestHandler<CreateUserProfileCommand, CreateUserProfileResult>
+    internal class CreateUserProfileCommandHandler(IDocumentSession session)
+        : ICommandHandler<CreateUserProfileCommand, CreateUserProfileResult>
     {
         public async Task<CreateUserProfileResult> Handle(CreateUserProfileCommand command, CancellationToken cancellationToken)
         {
-
-            var result = await validator.ValidateAsync(command, cancellationToken);
-            var errors = result.Errors.Select(x => x.ErrorMessage).ToList();
-            if (errors.Any())
-            {
-                throw new System.ComponentModel.DataAnnotations.ValidationException(errors.FirstOrDefault());
-            }
-
             //Create Entity from command object
             //Save Entity
             //Retrun result
