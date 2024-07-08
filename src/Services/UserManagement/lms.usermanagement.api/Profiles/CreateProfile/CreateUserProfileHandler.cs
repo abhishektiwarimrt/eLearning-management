@@ -1,8 +1,4 @@
-﻿
-
-using FluentValidation;
-
-namespace lms.usermanagement.api.Profiles.CreateProfile
+﻿namespace lms.usermanagement.api.Profiles.CreateProfile
 {
     public record CreateUserProfileCommand(string FirstName, string LastName, string Title, string Address, string City, string Country)
     : ICommand<CreateUserProfileResult>;
