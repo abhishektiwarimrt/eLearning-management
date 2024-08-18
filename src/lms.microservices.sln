@@ -15,6 +15,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "lms.buildingblocks", "Build
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{F78AE2A5-21AC-4430-A31D-E751FE5CD4BA}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CourseManagement", "CourseManagement", "{16F62E27-CFF8-4FBC-9B26-60C77261A81A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "lms.course.api", "Services\CouseManagement\lms.course.api\lms.course.api.csproj", "{5DFA3D11-FC2C-4E6D-83A2-4FE7A30F69E6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +37,10 @@ Global
 		{F78AE2A5-21AC-4430-A31D-E751FE5CD4BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F78AE2A5-21AC-4430-A31D-E751FE5CD4BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F78AE2A5-21AC-4430-A31D-E751FE5CD4BA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5DFA3D11-FC2C-4E6D-83A2-4FE7A30F69E6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DFA3D11-FC2C-4E6D-83A2-4FE7A30F69E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DFA3D11-FC2C-4E6D-83A2-4FE7A30F69E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5DFA3D11-FC2C-4E6D-83A2-4FE7A30F69E6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -41,6 +49,8 @@ Global
 		{FB22DCCF-E109-4AA1-9BF7-A314138F7108} = {39E67C76-F419-4A2F-B3C5-0F951994681C}
 		{42E88419-23C6-42CC-8573-D0DC7FC2A7A8} = {FB22DCCF-E109-4AA1-9BF7-A314138F7108}
 		{ED0CB38C-8F0C-46BB-AA52-A0FB2740DAFA} = {EF5242EF-8E1B-4D4E-8214-2E24394B142F}
+		{16F62E27-CFF8-4FBC-9B26-60C77261A81A} = {39E67C76-F419-4A2F-B3C5-0F951994681C}
+		{5DFA3D11-FC2C-4E6D-83A2-4FE7A30F69E6} = {16F62E27-CFF8-4FBC-9B26-60C77261A81A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7659F852-F16C-4D6A-8EDB-A7857E8F312F}
