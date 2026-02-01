@@ -17,7 +17,6 @@ namespace lms.services.coursemanagement
                 args,
                 configureServices: builder =>
                 {
-                    builder.Configuration.AddEnvironmentVariables();
                     TypeAdapterConfig.GlobalSettings.Default.MapToConstructor(true);
                     // Add custom services
                     // Add services to the container
