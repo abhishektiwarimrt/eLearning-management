@@ -1,0 +1,42 @@
+2025-01-05 20:37:20.671 +00:00 [INF] [START] Handle request=CreateCourseSectionsCommand - Response=CreateCourseSectionsResult - RequestData=CreateCourseSectionsCommand { CourseSectionDtos = System.Collections.Generic.List`1[lms.shared.common.DTOs.coursemanagement.create.CourseSectionDto], CourseId = e33e7b8d-60ba-4407-8a35-4466894ffa1b }
+2025-01-05 20:37:22.985 +00:00 [ERR] An error occurred using the connection to database 'coursemanagement' on server 'tcp://localhost:5432'.
+2025-01-05 20:37:41.474 +00:00 [ERR] An unhandled exception has occurred while executing the request.
+System.InvalidOperationException: The connection does not have any active transactions.
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.RollbackTransactionAsync(CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Infrastructure.DatabaseFacade.RollbackTransactionAsync(CancellationToken cancellationToken)
+   at lms.shared.data.unitofwork.UnitOfWork`1.RollbackAsync() in C:\Data\Repos\eLearningManagementSystem\src\lms.shared.data\unitofwork\UnitOfWork.cs:line 40
+   at lms.services.coursemanagement.Features.V1.CourseSection.Create.CreateCourseSectionHandler.Handle(CreateCourseSectionsCommand command, CancellationToken cancellationToken) in C:\Data\Repos\eLearningManagementSystem\src\lms.services\lms.services.coursemanagement\Features\V1\CourseSection\Create\CreateCourseSectionHandler.cs:line 35
+   at lms.buildingblocks.behaviours.LogBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in C:\Data\Repos\eLearningManagementSystem\src\lms.buildingblocks\behaviours\LogBehavior.cs:line 22
+   at lms.buildingblocks.behaviours.ValidationBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in C:\Data\Repos\eLearningManagementSystem\src\lms.buildingblocks\behaviours\ValidationBehavior.cs:line 29
+   at lms.services.coursemanagement.Features.V1.CourseSection.Create.CreateCourseSectionEndpoint.<ConfigureApi>b__4_0(Guid CourseId, CreateCourseSectionsRequest request, ISender sender, HttpContext context) in C:\Data\Repos\eLearningManagementSystem\src\lms.services\lms.services.coursemanagement\Features\V1\CourseSection\Create\CreateCourseSectionEndpoint.cs:line 33
+   at Microsoft.AspNetCore.Http.RequestDelegateFactory.ExecuteTaskResult[T](Task`1 task, HttpContext httpContext)
+   at Microsoft.AspNetCore.Http.RequestDelegateFactory.<>c__DisplayClass102_2.<<HandleRequestBodyAndCompileRequestDelegateForJson>b__2>d.MoveNext()
+--- End of stack trace from previous location ---
+   at lms.buildingblocks.middleware.RateLimitingMiddleware.FixedWindowRateLimit(HttpContext context, String clientIp) in C:\Data\Repos\eLearningManagementSystem\src\lms.buildingblocks\middleware\RateLimitingMiddleware.cs:line 85
+   at lms.buildingblocks.middleware.RateLimitingMiddleware.Invoke(HttpContext context) in C:\Data\Repos\eLearningManagementSystem\src\lms.buildingblocks\middleware\RateLimitingMiddleware.cs:line 52
+   at Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddlewareImpl.<Invoke>g__Awaited|10_0(ExceptionHandlerMiddlewareImpl middleware, HttpContext context, Task task)
+2025-01-05 20:37:41.482 +00:00 [ERR] Error Message: The connection does not have any active transactions., Time of occurance "2025-01-05T20:37:41.4796469Z"
+2025-01-05 20:38:01.893 +00:00 [INF] [START] Handle request=CreateCourseSectionsCommand - Response=CreateCourseSectionsResult - RequestData=CreateCourseSectionsCommand { CourseSectionDtos = System.Collections.Generic.List`1[lms.shared.common.DTOs.coursemanagement.create.CourseSectionDto], CourseId = e33e7b8d-60ba-4407-8a35-4466894ffa1b }
+2025-01-05 20:38:04.536 +00:00 [ERR] An error occurred using the connection to database 'coursemanagement' on server 'tcp://localhost:5432'.
+2025-01-05 20:38:50.115 +00:00 [ERR] An unhandled exception has occurred while executing the request.
+System.InvalidOperationException: The connection does not have any active transactions.
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.RollbackTransactionAsync(CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Infrastructure.DatabaseFacade.RollbackTransactionAsync(CancellationToken cancellationToken)
+   at lms.shared.data.unitofwork.UnitOfWork`1.RollbackAsync() in C:\Data\Repos\eLearningManagementSystem\src\lms.shared.data\unitofwork\UnitOfWork.cs:line 40
+   at lms.services.coursemanagement.Features.V1.CourseSection.Create.CreateCourseSectionHandler.Handle(CreateCourseSectionsCommand command, CancellationToken cancellationToken) in C:\Data\Repos\eLearningManagementSystem\src\lms.services\lms.services.coursemanagement\Features\V1\CourseSection\Create\CreateCourseSectionHandler.cs:line 35
+   at lms.buildingblocks.behaviours.LogBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in C:\Data\Repos\eLearningManagementSystem\src\lms.buildingblocks\behaviours\LogBehavior.cs:line 22
+   at lms.buildingblocks.behaviours.ValidationBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in C:\Data\Repos\eLearningManagementSystem\src\lms.buildingblocks\behaviours\ValidationBehavior.cs:line 29
+   at lms.services.coursemanagement.Features.V1.CourseSection.Create.CreateCourseSectionEndpoint.<ConfigureApi>b__4_0(Guid CourseId, CreateCourseSectionsRequest request, ISender sender, HttpContext context) in C:\Data\Repos\eLearningManagementSystem\src\lms.services\lms.services.coursemanagement\Features\V1\CourseSection\Create\CreateCourseSectionEndpoint.cs:line 33
+   at Microsoft.AspNetCore.Http.RequestDelegateFactory.ExecuteTaskResult[T](Task`1 task, HttpContext httpContext)
+   at Microsoft.AspNetCore.Http.RequestDelegateFactory.<>c__DisplayClass102_2.<<HandleRequestBodyAndCompileRequestDelegateForJson>b__2>d.MoveNext()
+--- End of stack trace from previous location ---
+   at lms.buildingblocks.middleware.RateLimitingMiddleware.FixedWindowRateLimit(HttpContext context, String clientIp) in C:\Data\Repos\eLearningManagementSystem\src\lms.buildingblocks\middleware\RateLimitingMiddleware.cs:line 97
+   at lms.buildingblocks.middleware.RateLimitingMiddleware.Invoke(HttpContext context) in C:\Data\Repos\eLearningManagementSystem\src\lms.buildingblocks\middleware\RateLimitingMiddleware.cs:line 52
+   at Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddlewareImpl.<Invoke>g__Awaited|10_0(ExceptionHandlerMiddlewareImpl middleware, HttpContext context, Task task)
+2025-01-05 20:38:57.817 +00:00 [ERR] Error Message: The connection does not have any active transactions., Time of occurance "2025-01-05T20:38:57.7876304Z"
+2025-01-05 20:39:07.258 +00:00 [INF] [START] Handle request=CreateCourseSectionsCommand - Response=CreateCourseSectionsResult - RequestData=CreateCourseSectionsCommand { CourseSectionDtos = System.Collections.Generic.List`1[lms.shared.common.DTOs.coursemanagement.create.CourseSectionDto], CourseId = e33e7b8d-60ba-4407-8a35-4466894ffa1b }
+2025-01-05 20:39:33.564 +00:00 [ERR] An error occurred using the connection to database 'coursemanagement' on server 'tcp://localhost:5432'.
+2025-01-05 21:33:07.615 +00:00 [INF] [START] Handle request=CreateCourseCommand - Response=CreateCourseResult - RequestData=CreateCourseCommand { CourseDto = lms.shared.common.DTOs.coursemanagement.create.CourseDto }
+2025-01-05 21:33:09.581 +00:00 [INF] [END] Handled CreateCourseCommand with CreateCourseResult
+2025-01-05 21:35:01.813 +00:00 [INF] [START] Handle request=CreateCourseCommand - Response=CreateCourseResult - RequestData=CreateCourseCommand { CourseDto = lms.shared.common.DTOs.coursemanagement.create.CourseDto }
+2025-01-05 21:35:01.887 +00:00 [INF] [END] Handled CreateCourseCommand with CreateCourseResult

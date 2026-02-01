@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>c002ae04-2fe2-4042-b1da-108fda068944</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="CourseEnrollmentService.cs" />
+    <Compile Remove="CourseModuleService.cs" />
+    <Compile Remove="CourseService.cs" />
+    <Compile Remove="CreateCourseEndpoint.cs" />
+    <Compile Remove="CreateCourseHandler.cs" />
+    <Compile Remove="ICourseEnrollmentService.cs" />
+    <Compile Remove="ICourseModuleService.cs" />
+    <Compile Remove="ICourseService.cs" />
+    <Compile Remove="RoleService.cs" />
+    <Compile Remove="UserService.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="3.7.301" />
+    <PackageReference Include="AWSSDK.S3" Version="3.7.402.5" />
+    <PackageReference Include="AWSSDK.SQS" Version="3.7.400.25" />
+    <PackageReference Include="Carter" Version="8.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.8">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
+    <PackageReference Include="Serilog" Version="4.0.1" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="8.0.0" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="8.0.2" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\lms.buildingblocks\lms.buildingblocks.csproj" />
+    <ProjectReference Include="..\..\lms.services.aws\lms.services.aws.csproj" />
+    <ProjectReference Include="..\..\lms.shared.common\lms.shared.common.csproj" />
+    <ProjectReference Include="..\..\lms.shared.data\lms.shared.data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Features\V1\Quize\" />
+    <Folder Include="Utilities\" />
+  </ItemGroup>
+
+</Project>
