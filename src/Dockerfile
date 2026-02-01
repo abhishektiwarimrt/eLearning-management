@@ -14,9 +14,9 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["lms.services/lms.services.coursemanagement/lms.services.coursemanagement.csproj", "lms.services/lms.services.coursemanagement/"]
 COPY ["lms.services.aws/lms.services.aws.csproj", "lms.services.aws/"]
-COPY ["../../lms.buildingblocks/lms.buildingblocks.csproj", "lms.buildingblocks/"]
-COPY ["../lms.shared.common/lms.shared.common.csproj", "lms.shared.common/"]
-COPY ["../lms.shared.data/lms.shared.data.csproj", "lms.shared.data/"]
+COPY ["lms.buildingblocks/lms.buildingblocks.csproj", "lms.buildingblocks/"]
+COPY ["lms.shared.common/lms.shared.common.csproj", "lms.shared.common/"]
+COPY ["lms.shared.data/lms.shared.data.csproj", "lms.shared.data/"]
 RUN dotnet restore "./lms.services/lms.services.coursemanagement/lms.services.coursemanagement.csproj"
 COPY . .
 WORKDIR "/src/lms.services/lms.services.coursemanagement"
