@@ -1,0 +1,71 @@
+﻿@{
+    ViewData["Title"] = "Teach on LMS - Start Your Journey";
+    Layout = "_Layout";
+}
+
+<div class="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 py-20">
+    <!-- Hero Section -->
+    <section class="container mx-auto px-6 text-center">
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-5xl md:text-6xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-6 leading-tight">
+                Become an LMS Instructor<br>
+                Share Your Knowledge & Earn
+            </h1>
+            <p class="text-xl text-gray-600 mb-8 leading-relaxed max-w-2xl mx-auto">
+                Create courses like Udemy, teach millions of students, and earn passive income.
+                No technical skills needed - just share your expertise!
+            </p>
+            <a asp-action="Onboarding" class="inline-block bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-12 py-4 rounded-2xl text-xl font-semibold shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 transform">
+                Start Teaching Journey →
+            </a>
+        </div>
+
+        <!-- 4-Step Journey -->
+        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mt-24">
+            <div class="text-center p-8 bg-white/70 backdrop-blur-md rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300">
+                <div class="w-20 h-20 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <span class="text-2xl font-bold text-indigo-600">1</span>
+                </div>
+                <h3 class="text-2xl font-bold mb-4 text-gray-800">Choose Topic</h3>
+                <p class="text-gray-600">Pick subjects you're expert in - Programming, Business, or even Sanskrit!</p>
+            </div>
+            <div class="text-center p-8 bg-white/70 backdrop-blur-md rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300">
+                <div class="w-20 h-20 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <span class="text-2xl font-bold text-purple-600">2</span>
+                </div>
+                <h3 class="text-2xl font-bold mb-4 text-gray-800">Plan Course</h3>
+                <p class="text-gray-600">Outline lectures and create engaging content structure</p>
+            </div>
+            <div class="text-center p-8 bg-white/70 backdrop-blur-md rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300">
+                <div class="w-20 h-20 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <span class="text-2xl font-bold text-emerald-600">3</span>
+                </div>
+                <h3 class="text-2xl font-bold mb-4 text-gray-800">Record Videos</h3>
+                <p class="text-gray-600">Simple screen recording - no fancy equipment needed</p>
+            </div>
+            <div class="text-center p-8 bg-white/70 backdrop-blur-md rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300">
+                <div class="w-20 h-20 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <span class="text-2xl font-bold text-orange-600">4</span>
+                </div>
+                <h3 class="text-2xl font-bold mb-4 text-gray-800">Publish & Earn</h3>
+                <p class="text-gray-600">Go live and start earning from every student enrollment</p>
+            </div>
+        </div>
+
+        <!-- Stats Section -->
+        <div class="grid md:grid-cols-3 gap-8 mt-24">
+            <div class="text-center p-8 bg-white rounded-3xl shadow-2xl">
+                <div class="text-4xl font-bold text-indigo-600">75K+</div>
+                <div class="text-gray-600 mt-2">Active Instructors</div>
+            </div>
+            <div class="text-center p-8 bg-white rounded-3xl shadow-2xl">
+                <div class="text-4xl font-bold text-purple-600">$50M+</div>
+                <div class="text-gray-600 mt-2">Total Earnings Paid</div>
+            </div>
+            <div class="text-center p-8 bg-white rounded-3xl shadow-2xl">
+                <div class="text-4xl font-bold text-emerald-600">2M+</div>
+                <div class="text-gray-600 mt-2">Courses Live</div>
+            </div>
+        </div>
+    </section>
+</div>

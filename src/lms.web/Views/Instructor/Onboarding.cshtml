@@ -1,0 +1,222 @@
+﻿@model OnboardingViewModel
+@{
+    ViewData["Title"] = "Instructor Onboarding";
+    Layout = "_OnboardingLayout";
+}
+
+<div class="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-2xl mx-auto bg-white shadow-2xl rounded-3xl p-8 md:p-12">
+
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Become an Instructor</h1>
+            <p class="text-xl text-gray-600 mb-8 leading-relaxed max-w-lg mx-auto">
+                Over the years we've helped thousands of instructors learn how to record at home.
+                No matter your experience level, you can become a video pro too.
+                We'll equip you with the latest resources, tips, and support to help you succeed.
+            </p>
+
+            <!-- Progress steps -->
+            <div class="flex justify-center mb-8">
+                <div class="flex items-center space-x-3">
+                    @for (int i = 0; i < Model.Steps.Length; i++)
+                    {
+                        <div class="w-14 h-14 flex items-center justify-center rounded-2xl font-bold text-base shadow-md transition-all
+                            @(i + 1 < Model.CurrentStep ? "bg-indigo-600 text-white scale-110" :
+                                                           i + 1 == Model.CurrentStep ? "bg-indigo-100 text-indigo-800 border-4 border-indigo-400" :
+                                                                                         "bg-gray-200 text-gray-500 hover:bg-gray-300")">
+                            @(i + 1)
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="flex justify-center space-x-6 text-sm font-semibold text-gray-500">
+                @foreach (var step in Model.Steps)
+                {
+                    <span>@step</span>
+                }
+            </div>
+        </div>
+
+        <!-- ── NEXT form (submits to Onboarding POST) ─────────────────────── -->
+        @using (Html.BeginForm("Onboarding", "Instructor", FormMethod.Post,
+                            new { id = "nextForm", @class = "space-y-8" }))
+        {
+            @Html.AntiForgeryToken()
+
+            @* FIX 1: ONE hidden field only. Html.HiddenFor was generating a second
+               field with the same name "CurrentStep", causing the model binder to
+               receive two values and pick the first one (always the original step).
+               Remove Html.HiddenFor and keep only the explicit input so the value
+               is always exactly what we set it to before submit. *@
+            <input type="hidden" name="CurrentStep" id="CurrentStep" value="@Model.CurrentStep" />
+
+            <!-- Step 1: Experience -->
+            @if (Model.CurrentStep == 1)
+            {
+                <div>
+                    <div class="text-center mb-10">
+                        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                            How much of a video "pro" are you?
+                        </h2>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-3">Years of teaching/training experience</label>
+                            <input asp-for="YearsExperience" type="number" min="0" max="50"
+                                   class="w-full p-4 border border-gray-300 rounded-2xl focus:ring-4 focus:ring-indigo-200 focus:border-indigo-500 transition shadow-sm" />
+                            <span asp-validation-for="YearsExperience" class="text-red-500 text-xs mt-1 block"></span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-3">Prior online courses? (links/URLs)</label>
+                            <input asp-for="PriorCourses" class="w-full p-4 border border-gray-300 rounded-2xl focus:ring-4 focus:ring-indigo-200 focus:border-indigo-500 transition shadow-sm" />
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Step 2: Topics & Expertise -->
+            @if (Model.CurrentStep == 2)
+            {
+                <div>
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-8 text-center">What topics do you specialize in?</h2>
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-3">Expertise areas (e.g., .NET, Vue.js, AI)</label>
+                            <textarea asp-for="Specialties" rows="4"
+                                      class="w-full p-4 border border-gray-300 rounded-2xl focus:ring-4 focus:ring-indigo-200 focus:border-indigo-500 resize-vertical shadow-sm"></textarea>
+                            <span asp-validation-for="Specialties" class="text-red-500 text-xs mt-1 block"></span>
+                        </div>
+                        <label class="flex items-center">
+                            <input asp-for="HasRecordingEquipment" type="checkbox"
+                                   class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                            <span class="ml-2 text-sm text-gray-700">I have HD video/audio recording setup</span>
+                        </label>
+                    </div>
+                </div>
+            }
+
+            <!-- Step 3: Commitment & Profile Basics -->
+            @if (Model.CurrentStep == 3)
+            {
+                <div>
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-8 text-center">Your commitment to creating great courses</h2>
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-3">Course plan (e.g., "5+ lectures, 30+ min video")</label>
+                            <input asp-for="CoursePlan" class="w-full p-4 border border-gray-300 rounded-2xl focus:ring-4 focus:ring-indigo-200 focus:border-indigo-500 shadow-sm" />
+                            <span asp-validation-for="CoursePlan" class="text-red-500 text-xs mt-1 block"></span>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-3">Headline (max 60 chars)</label>
+                                <input asp-for="Headline" maxlength="60"
+                                       class="w-full p-4 border border-gray-300 rounded-2xl focus:ring-4 focus:ring-indigo-200 focus:border-indigo-500 shadow-sm" />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-3">Short bio</label>
+                                <textarea asp-for="Bio" rows="3"
+                                          class="w-full p-4 border border-gray-300 rounded-2xl focus:ring-4 focus:ring-indigo-200 focus:border-indigo-500 shadow-sm"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Step 4: Final Profile & Terms -->
+            @if (Model.CurrentStep == 4)
+            {
+                <div>
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-8 text-center">Complete your profile &amp; agree to terms</h2>
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-3">Primary course language</label>
+                                <input asp-for="Language" class="w-full p-4 border border-gray-300 rounded-2xl focus:ring-4 focus:ring-indigo-200 focus:border-indigo-500 shadow-sm" />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-3">Payout method</label>
+                                <select asp-for="PayoutMethod"
+                                        class="w-full p-4 border border-gray-300 rounded-2xl focus:ring-4 focus:ring-indigo-200 focus:border-indigo-500 shadow-sm">
+                                    <option value="">Select...</option>
+                                    <option value="PayPal">PayPal</option>
+                                    <option value="Payoneer">Payoneer</option>
+                                    <option value="DirectDeposit">Direct Deposit</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="p-6 bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-2xl">
+                            <label class="flex items-start cursor-pointer p-4">
+                                <input type="checkbox" name="TermsAccepted" value="true" required
+                                       class="w-6 h-6 text-indigo-600 border-2 border-gray-300 rounded-lg focus:ring-indigo-500 mt-1 mr-4 flex-shrink-0" />
+                                <div class="text-lg">
+                                    <p class="font-semibold text-gray-900 mb-1">I accept the Terms of Service and agree to promotional programs</p>
+                                    <p class="text-sm text-gray-600">Profile picture, links, and final approval after submission.</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Navigation buttons -->
+            <div class="flex justify-between pt-12 border-t border-gray-200">
+                @if (Model.CurrentStep > 1)
+                {
+                    @* FIX 2: prevStep() was calling document.forms[0].submit() which
+                       submits nextForm (action="Onboarding") instead of prevForm.
+                       Now it submits the separate prevForm below instead. *@
+                    <button type="button" onclick="prevStep()"
+                            class="px-10 py-4 bg-gray-100 text-gray-700 rounded-2xl hover:bg-gray-200 transition-all font-semibold shadow-md">
+                        ← Previous Step
+                    </button>
+                }
+                <button type="submit"
+                        class="px-16 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl hover:from-indigo-700 hover:to-purple-700 transition-all font-semibold shadow-xl text-lg ml-auto">
+                    @(Model.CurrentStep == 4 ? "🚀 Complete Onboarding" : "Next Step →")
+                </button>
+            </div>
+        }
+
+        @* FIX 3: Separate form for PrevStep so it posts to the correct action.
+           The hidden CurrentStep is written by prevStep() in JS before submit. *@
+        @using (Html.BeginForm("PrevStep", "Instructor", FormMethod.Post,
+                            new { id = "prevForm" }))
+        {
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="CurrentStep" id="PrevCurrentStep" value="@Model.CurrentStep" />
+
+            @* Carry forward all collected field values so RestoreFromSession has
+               something to work with even if the session expired. *@
+            <input type="hidden" name="YearsExperience" value="@Model.YearsExperience" />
+            <input type="hidden" name="PriorCourses" value="@Model.PriorCourses" />
+            <input type="hidden" name="Specialties" value="@Model.Specialties" />
+            <input type="hidden" name="HasRecordingEquipment" value="@Model.HasRecordingEquipment.ToString().ToLower()" />
+            <input type="hidden" name="CoursePlan" value="@Model.CoursePlan" />
+            <input type="hidden" name="Headline" value="@Model.Headline" />
+            <input type="hidden" name="Bio" value="@Model.Bio" />
+            <input type="hidden" name="Language" value="@Model.Language" />
+        }
+
+    </div>
+</div>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <script>window.scrollTo(0, 0);</script>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function prevStep() {
+        // FIX 4: Copy the live CurrentStep value from the main form into
+        // prevForm before submitting, so the controller receives the correct
+        // step number and decrements it accurately.
+        document.getElementById('PrevCurrentStep').value =
+        document.getElementById('CurrentStep').value;
+
+        document.getElementById('prevForm').submit();
+        }
+    </script>
+}

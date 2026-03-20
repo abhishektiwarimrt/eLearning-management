@@ -1,4 +1,5 @@
 ﻿using lms.buildingblocks.RequestResponse;
+using Microsoft.AspNetCore.Mvc;
 
 namespace lms.services.usermanagement.UserManagement.V1.GetUserByEmail
 {
@@ -13,13 +14,17 @@ namespace lms.services.usermanagement.UserManagement.V1.GetUserByEmail
 
 
             group.MapGet("/",
-            async (string UserEmail,
-            ISender sender, HttpContext context) =>
+            async ([FromQuery] string userEmail,
+                ISender sender, HttpContext context) =>
             {
-                var userEmail = context.Request.Query["UserEmail"].ToString();
+                if (string.IsNullOrWhiteSpace(userEmail))
+                    return Results.BadRequest("UserEmail required");
+
+                //var userEmail = context.Request.Query["UserEmail"].ToString();
                 var result = await sender.Send(new GetUserByEmailQuery(userEmail));
 
                 var response = result.Adapt<GetUserByEmailResponse>();
+                response.User.LastLoginDate = DateTime.UtcNow;
                 var apiResponse = new ApiResponse<GetUserByEmailResponse>
                 {
                     Status = "success",
@@ -39,11 +44,7 @@ namespace lms.services.usermanagement.UserManagement.V1.GetUserByEmail
             .Produces<GetUserByEmailResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .WithSummary("Get User By Email")
-            .WithDescription("Get User Email")
-            .HasDeprecatedApiVersion(1);
-
-
-
+            .WithDescription("Get User Email");
         }
     }
 }

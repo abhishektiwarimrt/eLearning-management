@@ -1,0 +1,71 @@
+﻿@model RegisterViewModel
+@{
+    ViewData["Title"] = "Register";
+}
+
+<div class="min-h-screen from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center p-6">
+    <div class="max-w-md w-full bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl p-8">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-3">
+                Join LMS
+            </h1>
+            <p class="text-gray-600">Create your account to start learning</p>
+        </div>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-xl mb-6 animate-pulse">
+                @TempData["Success"]
+            </div>
+        }
+
+        <form asp-action="Register" method="post" id="registerForm">
+            @Html.AntiForgeryToken()
+
+            <div class="mb-6">
+                <label asp-for="FirstName" class="block text-sm font-medium text-gray-700 mb-2"></label>
+                <input asp-for="FirstName" class="form-control w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" />
+                <span asp-validation-for="FirstName" class="text-red-500 text-xs mt-1"></span>
+            </div>
+            <div class="mb-6">
+                <label asp-for="LastName" class="block text-sm font-medium text-gray-700 mb-2"></label>
+                <input asp-for="LastName" class="form-control w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" />
+                <span asp-validation-for="LastName" class="text-red-500 text-xs mt-1"></span>
+            </div>
+
+            <div class="mb-6">
+                <label asp-for="Email" class="block text-sm font-medium text-gray-700 mb-2"></label>
+                <input asp-for="Email" class="form-control w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" />
+                <span asp-validation-for="Email" class="text-red-500 text-xs mt-1"></span>
+            </div>
+
+            <div class="mb-8">
+                <label asp-for="Password" class="block text-sm font-medium text-gray-700 mb-2"></label>
+                <input asp-for="Password" type="password" class="form-control w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" />
+                <span asp-validation-for="Password" class="text-red-500 text-xs mt-1"></span>
+            </div>
+
+            @if (!Model.IsSuccess && !ViewData.ModelState.IsValid)
+            {
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl mb-6">
+                    @Html.ValidationSummary(false, "", new { @class = "text-red-700" })
+                </div>
+            }
+
+            <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 px-6 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200">
+                Create Account
+            </button>
+        </form>
+
+        <div class="text-center mt-8">
+            <p class="text-sm text-gray-600">
+                Already have an account?
+                <a asp-controller="Account" asp-action="Login" class="text-indigo-600 hover:text-indigo-500 font-medium">Sign in</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

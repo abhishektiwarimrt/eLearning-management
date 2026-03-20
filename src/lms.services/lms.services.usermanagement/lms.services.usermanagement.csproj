@@ -9,10 +9,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="UserManagement\V2\GetUserByEmail\**" />
     <Compile Remove="UserRetrieval\**" />
+    <Content Remove="UserManagement\V2\GetUserByEmail\**" />
     <Content Remove="UserRetrieval\**" />
+    <EmbeddedResource Remove="UserManagement\V2\GetUserByEmail\**" />
     <EmbeddedResource Remove="UserRetrieval\**" />
+    <None Remove="UserManagement\V2\GetUserByEmail\**" />
     <None Remove="UserRetrieval\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="UserManagement\V1\CreateUser\CreateUserEndpoint.cs" />
+    <Compile Remove="UserManagement\V1\CreateUser\CreateUserHandler.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -38,6 +47,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="UserManagement\V1\CreateUser\" />
+    <Folder Include="UserManagement\V2\" />
     <Folder Include="Utilities\" />
   </ItemGroup>
 

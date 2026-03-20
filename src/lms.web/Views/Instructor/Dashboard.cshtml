@@ -1,0 +1,524 @@
+﻿@model InstructorProfileViewModel
+@using lms.web.Models
+@{
+    ViewData["Title"] = "Instructor Dashboard";
+    Layout = "_Layout";
+    var section = ViewBag.ActiveSection as string ?? "overview";
+    var showWelcome = ViewBag.ShowWelcomeBanner == true;
+    var initials = (Model.FirstName.Length > 0 ? Model.FirstName[0].ToString() : "I").ToUpper();
+    var fullName = $"{Model.FirstName} {Model.LastName}".Trim();
+    if (string.IsNullOrWhiteSpace(fullName)) fullName = "Instructor";
+}
+
+<div class="flex min-h-screen bg-gray-50">
+
+    <!-- ── Sidebar ─────────────────────────────────────────────────────── -->
+    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col py-8 px-4 sticky top-16 self-start h-[calc(100vh-4rem)] overflow-y-auto">
+
+        <!-- Avatar + name -->
+        <div class="flex flex-col items-center text-center mb-8 px-2">
+            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold mb-3 shadow-md">
+                @initials
+            </div>
+            <p class="font-semibold text-gray-800 text-sm leading-snug">@fullName</p>
+            <span class="mt-1 inline-block bg-indigo-50 text-indigo-700 text-xs font-semibold px-3 py-0.5 rounded-full">Instructor</span>
+        </div>
+
+        <!-- Nav links -->
+        <nav class="flex flex-col space-y-1">
+            <a asp-action="Dashboard"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all
+                @(section == "overview" ? "bg-indigo-600 text-white shadow-sm" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900")">
+                <i class="fas fa-th-large w-4 text-center"></i>
+                Overview
+            </a>
+
+            <a asp-action="Profile"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all
+                @(section == "profile" ? "bg-indigo-600 text-white shadow-sm" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900")">
+                <i class="fas fa-user-edit w-4 text-center"></i>
+                Profile &amp; Settings
+            </a>
+
+            <a asp-action="Courses"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all
+                @(section == "courses" ? "bg-indigo-600 text-white shadow-sm" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900")">
+                <i class="fas fa-play-circle w-4 text-center"></i>
+                My Courses
+            </a>
+        </nav>
+
+        <!-- Divider + help link -->
+        <div class="mt-auto pt-4 border-t border-gray-100">
+            <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-all">
+                <i class="fas fa-question-circle w-4 text-center"></i>
+                Instructor help
+            </a>
+        </div>
+    </aside>
+
+    <!-- ── Main content ───────────────────────────────────────────────── -->
+    <main class="flex-1 p-8 max-w-5xl">
+
+        <!-- Welcome banner (shown once after onboarding) -->
+        @if (showWelcome)
+        {
+            <div class="mb-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-2xl flex items-start gap-4">
+                <span class="text-2xl">🎉</span>
+                <div>
+                    <p class="font-semibold text-indigo-800">Welcome to your Instructor Dashboard, @Model.FirstName!</p>
+                    <p class="text-sm text-indigo-600 mt-0.5">Your account has been upgraded to Instructor. Start by completing your profile, then create your first course.</p>
+                </div>
+            </div>
+        }
+
+        @if (TempData["ProfileSuccess"] != null)
+        {
+            <div class="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-2xl flex items-center gap-3">
+                <i class="fas fa-check-circle text-green-500"></i>
+                <span>@TempData["ProfileSuccess"]</span>
+            </div>
+        }
+
+        <!-- ══════════════════════════════════════════════════════════════
+             SECTION: Overview
+        ══════════════════════════════════════════════════════════════ -->
+        @if (section == "overview")
+        {
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900">Welcome back, @Model.FirstName! 👋</h1>
+                <p class="text-gray-500 mt-1">Here's an overview of your instructor account.</p>
+            </div>
+
+            <!-- Stats cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Published Courses</span>
+                        <div class="w-9 h-9 bg-indigo-50 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-book text-indigo-500 text-sm"></i>
+                        </div>
+                    </div>
+                    <div class="text-4xl font-bold text-gray-900">0</div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Total Students</span>
+                        <div class="w-9 h-9 bg-purple-50 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-users text-purple-500 text-sm"></i>
+                        </div>
+                    </div>
+                    <div class="text-4xl font-bold text-gray-900">0</div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Total Revenue</span>
+                        <div class="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-dollar-sign text-emerald-500 text-sm"></i>
+                        </div>
+                    </div>
+                    <div class="text-4xl font-bold text-gray-900">$0</div>
+                </div>
+            </div>
+
+            <!-- Quick actions -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-11 h-11 bg-indigo-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-user-edit text-indigo-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800">Complete your profile</h3>
+                            <p class="text-xs text-gray-400">Add your bio and headline</p>
+                        </div>
+                    </div>
+                    <a asp-action="Profile"
+                           class="block w-full text-center bg-indigo-50 text-indigo-700 font-semibold py-2.5 rounded-xl hover:bg-indigo-100 transition text-sm">
+                        Edit profile →
+                    </a>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-11 h-11 bg-purple-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-plus-circle text-purple-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800">Create your first course</h3>
+                            <p class="text-xs text-gray-400">Share your expertise and start earning</p>
+                        </div>
+                    </div>
+                    <a asp-action="Courses"
+                           class="block w-full text-center bg-purple-50 text-purple-700 font-semibold py-2.5 rounded-xl hover:bg-purple-100 transition text-sm">
+                        Create course →
+                    </a>
+                </div>
+            </div>
+
+            <!-- Getting started checklist -->
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                <h2 class="font-semibold text-gray-800 mb-4">Getting started checklist</h2>
+                <div class="space-y-3">
+                    <div class="flex items-center gap-3 text-sm">
+                        <div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-check text-green-600 text-xs"></i>
+                        </div>
+                        <span class="text-gray-500 line-through">Complete instructor onboarding</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-sm">
+                        <div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                            <span class="text-gray-400 text-xs">2</span>
+                        </div>
+                        <a asp-action="Profile" class="text-indigo-600 hover:underline">Update your profile bio and headline</a>
+                    </div>
+                    <div class="flex items-center gap-3 text-sm">
+                        <div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                            <span class="text-gray-400 text-xs">3</span>
+                        </div>
+                        <a asp-action="Courses" class="text-indigo-600 hover:underline">Create and publish your first course</a>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- ══════════════════════════════════════════════════════════════
+             SECTION: Profile & Settings
+        ══════════════════════════════════════════════════════════════ -->
+        @if (section == "profile")
+        {
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900">Profile &amp; Settings</h1>
+                <p class="text-gray-500 mt-1">This information will be visible on your public instructor profile.</p>
+            </div>
+
+            @if (Model.IsSuccess)
+            {
+                <div class="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-2xl flex items-center gap-3">
+                    <i class="fas fa-check-circle text-green-500"></i>
+                    <span>Profile updated successfully!</span>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+            {
+                <div class="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl flex items-center gap-3">
+                    <i class="fas fa-exclamation-circle text-red-500"></i>
+                    <span>@Model.ErrorMessage</span>
+                </div>
+            }
+
+            <form asp-action="Profile" method="post" class="space-y-8">
+                @Html.AntiForgeryToken()
+
+                <!-- Basic info card -->
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-6 pb-4 border-b border-gray-100">Basic information</h2>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">First name <span class="text-red-500">*</span></label>
+                            <input asp-for="FirstName"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition text-sm"
+                                   placeholder="John" />
+                            <span asp-validation-for="FirstName" class="text-red-500 text-xs mt-1 block"></span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Last name <span class="text-red-500">*</span></label>
+                            <input asp-for="LastName"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition text-sm"
+                                   placeholder="Smith" />
+                            <span asp-validation-for="LastName" class="text-red-500 text-xs mt-1 block"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Professional headline
+                            <span class="font-normal text-gray-400 ml-1">(max 60 characters — shown below your name on course cards)</span>
+                        </label>
+                        <input asp-for="Headline" maxlength="60"
+                               id="headlineInput"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition text-sm"
+                               placeholder="e.g. Senior .NET Engineer &amp; Course Creator" />
+                        <div class="flex justify-end mt-1">
+                            <span id="headlineCount" class="text-xs text-gray-400">@(Model.Headline?.Length ?? 0)/60</span>
+                        </div>
+                        <span asp-validation-for="Headline" class="text-red-500 text-xs block"></span>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Bio</label>
+                        <textarea asp-for="Bio" rows="6"
+                                  class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition resize-y text-sm"
+                                  placeholder="Tell students about your background, experience, and what makes you a great instructor..."></textarea>
+                        <span asp-validation-for="Bio" class="text-red-500 text-xs mt-1 block"></span>
+                    </div>
+                </div>
+
+                <!-- Links card -->
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-6 pb-4 border-b border-gray-100">Links &amp; social</h2>
+
+                    <div class="space-y-5">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Website</label>
+                            <div class="flex items-center border border-gray-300 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-indigo-200 focus-within:border-indigo-500 transition">
+                                <span class="px-3 py-3 bg-gray-50 border-r border-gray-300 text-gray-400 text-sm">
+                                    <i class="fas fa-globe"></i>
+                                </span>
+                                <input asp-for="Website" type="url"
+                                       class="flex-1 px-4 py-3 text-sm focus:outline-none bg-white"
+                                       placeholder="https://yourwebsite.com" />
+                            </div>
+                            <span asp-validation-for="Website" class="text-red-500 text-xs mt-1 block"></span>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">LinkedIn</label>
+                            <div class="flex items-center border border-gray-300 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-indigo-200 focus-within:border-indigo-500 transition">
+                                <span class="px-3 py-3 bg-gray-50 border-r border-gray-300 text-blue-600 text-sm">
+                                    <i class="fab fa-linkedin"></i>
+                                </span>
+                                <input asp-for="LinkedInUrl" type="url"
+                                       class="flex-1 px-4 py-3 text-sm focus:outline-none bg-white"
+                                       placeholder="https://linkedin.com/in/yourprofile" />
+                            </div>
+                            <span asp-validation-for="LinkedInUrl" class="text-red-500 text-xs mt-1 block"></span>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Twitter / X handle</label>
+                            <div class="flex items-center border border-gray-300 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-indigo-200 focus-within:border-indigo-500 transition">
+                                <span class="px-3 py-3 bg-gray-50 border-r border-gray-300 text-gray-500 text-sm font-medium">@@</span>
+                                <input asp-for="TwitterHandle"
+                                       class="flex-1 px-4 py-3 text-sm focus:outline-none bg-white"
+                                       placeholder="yourhandle" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preferences card -->
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-6 pb-4 border-b border-gray-100">Preferences</h2>
+
+                    <div class="max-w-xs">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Primary course language</label>
+                        <select asp-for="Language"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition text-sm bg-white">
+                            <option value="English">English</option>
+                            <option value="Hindi">Hindi</option>
+                            <option value="Spanish">Spanish</option>
+                            <option value="French">French</option>
+                            <option value="German">German</option>
+                            <option value="Portuguese">Portuguese</option>
+                            <option value="Japanese">Japanese</option>
+                            <option value="Chinese">Chinese (Simplified)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Save button -->
+                <div class="flex justify-end gap-4">
+                    <a asp-action="Dashboard" class="px-8 py-3 border border-gray-300 text-gray-600 rounded-xl hover:bg-gray-50 transition font-semibold text-sm">
+                        Cancel
+                    </a>
+                    <button type="submit"
+                            class="px-10 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition font-semibold text-sm shadow-sm">
+                        Save profile
+                    </button>
+                </div>
+            </form>
+        }
+
+        <!-- ══════════════════════════════════════════════════════════════
+             SECTION: My Courses
+        ══════════════════════════════════════════════════════════════ -->
+        @if (section == "courses")
+        {
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">My Courses</h1>
+                    <p class="text-gray-500 mt-1">Create and manage your courses.</p>
+                </div>
+                <button id="openNewCourse"
+                        class="flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl hover:bg-indigo-700 transition font-semibold text-sm shadow-sm">
+                    <i class="fas fa-plus"></i>
+                    New course
+                </button>
+            </div>
+
+            <!-- Empty state -->
+            <div id="emptyCoursesState" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-16 text-center">
+                <div class="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-film text-indigo-300 text-3xl"></i>
+                </div>
+                <h2 class="text-xl font-semibold text-gray-700 mb-2">No courses yet</h2>
+                <p class="text-gray-400 text-sm mb-8 max-w-sm mx-auto">
+                    Create your first course and start sharing your knowledge with thousands of students.
+                </p>
+                <button id="openNewCourse2"
+                        class="inline-flex items-center gap-2 bg-indigo-600 text-white px-8 py-3 rounded-xl hover:bg-indigo-700 transition font-semibold text-sm">
+                    <i class="fas fa-plus"></i>
+                    Create first course
+                </button>
+            </div>
+
+            <!-- Course list will appear here after creation (JavaScript-driven) -->
+            <div id="courseList" class="hidden space-y-4"></div>
+        }
+    </main>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     New Course Modal
+════════════════════════════════════════════════════════════════════════ -->
+<div id="newCourseModal"
+     class="hidden fixed inset-0 z-50 flex items-center justify-center"
+     style="background: rgba(0,0,0,0.45);">
+    <div class="bg-white rounded-2xl w-full max-w-lg mx-4 shadow-2xl overflow-hidden">
+
+        <!-- Modal header -->
+        <div class="flex items-center justify-between px-8 py-5 border-b border-gray-100">
+            <h2 class="text-lg font-semibold text-gray-800">Create new course</h2>
+            <button id="closeModal" class="text-gray-400 hover:text-gray-600 transition">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Modal body -->
+        <div class="px-8 py-6 space-y-5">
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Course title <span class="text-red-500">*</span></label>
+                <input id="courseTitle" type="text"
+                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition text-sm"
+                       placeholder="e.g. Complete .NET 8 Microservices" />
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Short description</label>
+                <textarea id="courseDescription" rows="3"
+                          class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition resize-none text-sm"
+                          placeholder="What will students learn in this course?"></textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Category</label>
+                    <select id="courseCategory"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition text-sm bg-white">
+                        <option value="Development">Development</option>
+                        <option value="Business">Business</option>
+                        <option value="Design">Design</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="IT & Software">IT &amp; Software</option>
+                        <option value="Personal Development">Personal Development</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Price (USD)</label>
+                    <input id="coursePrice" type="number" min="0" value="99"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition text-sm" />
+                </div>
+            </div>
+
+            <div id="courseModalError" class="hidden text-red-600 text-sm bg-red-50 border border-red-200 px-4 py-3 rounded-xl"></div>
+        </div>
+
+        <!-- Modal footer -->
+        <div class="flex gap-3 px-8 py-5 bg-gray-50 border-t border-gray-100">
+            <button id="cancelModal"
+                    class="flex-1 py-3 border border-gray-300 rounded-xl text-gray-600 hover:bg-white transition font-semibold text-sm">
+                Cancel
+            </button>
+            <button id="submitCourse"
+                    class="flex-1 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition font-semibold text-sm">
+                Create course
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // ── Modal helpers ──────────────────────────────────────────────────────────
+        const modal     = document.getElementById('newCourseModal');
+        const openBtns  = [document.getElementById('openNewCourse'), document.getElementById('openNewCourse2')].filter(Boolean);
+        const closeBtns = [document.getElementById('closeModal'), document.getElementById('cancelModal')];
+
+        openBtns.forEach(b => b?.addEventListener('click', () => modal.classList.remove('hidden')));
+        closeBtns.forEach(b => b?.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            document.getElementById('courseModalError').classList.add('hidden');
+        }));
+
+        // Close on backdrop click
+        modal.addEventListener('click', e => { if (e.target === modal) modal.classList.add('hidden'); });
+
+        // ── Create course ─────────────────────────────────────────────────────────
+        document.getElementById('submitCourse')?.addEventListener('click', async () => {
+            const title = document.getElementById('courseTitle').value.trim();
+            const errEl = document.getElementById('courseModalError');
+            const btn   = document.getElementById('submitCourse');
+
+            if (!title) {
+                errEl.textContent = 'Please enter a course title.';
+                errEl.classList.remove('hidden');
+                return;
+            }
+
+            btn.disabled    = true;
+            btn.textContent = 'Creating...';
+            errEl.classList.add('hidden');
+
+            try {
+                // POST to the coursemanagement microservice via your API gateway / proxy.
+                // Adjust the URL if you add a CourseManagement proxy to lms.web.
+                const res = await fetch('/api/courses', {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        courseDto: {
+                            title:       document.getElementById('courseTitle').value.trim(),
+                            description: document.getElementById('courseDescription').value.trim(),
+                            category:    document.getElementById('courseCategory').value,
+                            price:       parseFloat(document.getElementById('coursePrice').value) || 0
+                        }
+                    })
+                });
+
+                if (!res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    throw new Error(data?.title || 'Failed to create course');
+                }
+
+                // Success — reload to show the new course
+                window.location.reload();
+
+            } catch (err) {
+                errEl.textContent = err.message || 'Failed to create course. Please try again.';
+                errEl.classList.remove('hidden');
+            } finally {
+                btn.disabled    = false;
+                btn.textContent = 'Create course';
+            }
+        });
+
+        // ── Headline char counter ─────────────────────────────────────────────────
+        const headlineInput = document.getElementById('headlineInput');
+        const headlineCount = document.getElementById('headlineCount');
+        if (headlineInput && headlineCount) {
+            headlineInput.addEventListener('input', () => {
+                const len = headlineInput.value.length;
+                headlineCount.textContent = `${len}/60`;
+                headlineCount.className = len >= 55
+                    ? 'text-xs text-orange-500'
+                    : 'text-xs text-gray-400';
+            });
+        }
+    </script>
+}
