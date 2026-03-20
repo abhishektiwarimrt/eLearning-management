@@ -1,10 +1,16 @@
-﻿namespace lms.services.usermanagement.Services
+﻿using lms.services.usermanagement.UserManagement.V1.CreateUser;
+using lms.services.usermanagement.UserManagement.V1.UpdateUserProfile;
+
+namespace lms.services.usermanagement.Services
 {
     public interface IUserService
     {
         // User CRUD operations
-        Task<bool?> CreateUserAsync(RegisterUserDto registerUserDto);
+        Task<bool?> CreateUserAsync(RegisterUserCommand request);
         Task<UserDto?> GetUserByEmailAsync(string email);
+        Task<bool> ValidateUserCredentialsAsync(string email, string password);
+        Task<bool> UpdateProfileAsync(string email, UpdateUserProfileRequest request);
+
         //Task<UserDto> GetUserByIdAsync(int id);
         //Task<UserDto> UpdateUserAsync(int id, UpdateUserDto updateUserDto);
         //Task DeleteUserAsync(int id);

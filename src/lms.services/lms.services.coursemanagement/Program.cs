@@ -68,7 +68,7 @@ namespace lms.services.coursemanagement
                         return new SqsServiceEvent(sqsClient, configuration);
                     });
                     //builder.Services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
-                    builder.Services.AddHostedService<FileUploadWorkerService>();
+                    //builder.Services.AddHostedService<FileUploadWorkerService>();
                     
 
 

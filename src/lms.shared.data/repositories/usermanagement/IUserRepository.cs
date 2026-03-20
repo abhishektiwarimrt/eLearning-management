@@ -9,7 +9,8 @@ namespace lms.shared.data.repositories.usermanagement
         Task<IdentityResult?> CreateAsync(User user);
         Task<User?> GetUserByEmailAsync(string email);
         //Task<UserDto> GetByIdAsync(int id);
-
+        Task<bool> ValidateCredentialsAsync(string email, string password);
+        Task<IdentityResult?> UpdateAsync(User user);
 
         //Task<UserDto> UpdateAsync(int id, UpdateUserDto updateUserDto);
         //Task DeleteAsync(int id);
@@ -22,8 +23,8 @@ namespace lms.shared.data.repositories.usermanagement
         //Task<IEnumerable<UserDto>> SearchAsync(string searchTerm, int page, int pageSize);
         //Task<IEnumerable<UserDto>> GetByRoleAsync(string roleName, int page, int pageSize);
 
-        //// Authentication and security
-        //Task<bool> ValidateCredentialsAsync(string email, string password);
+        // Authentication and security
+
         //Task<bool> ChangePasswordAsync(int userId, string currentPassword, string newPassword);
         //Task<bool> ResetPasswordAsync(string email);
 

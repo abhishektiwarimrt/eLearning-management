@@ -8,27 +8,47 @@ namespace lms.shared.data.repositories.usermanagement
     {
         private readonly UserDbContext _context;
         private readonly UserManager<User> _userManager;
-        private readonly RoleManager<IdentityRole<int>> _roleManager;
 
         public UserRepository(
             UserDbContext context,
             UserManager<User> userManager,
-            RoleManager<IdentityRole<int>> roleManager)
+            IRoleRepository roleRepository)
         {
             _context = context;
             _userManager = userManager;
-            _roleManager = roleManager;
         }
 
         public async Task<IdentityResult?> CreateAsync(User user)
         {
             user.UserName = user.Email;
-            return await _userManager.CreateAsync(user);
+            return await _userManager.CreateAsync(user, user.PasswordHash);
         }
 
         public async Task<User?> GetUserByEmailAsync(string email)
         {
             return await _userManager.FindByNameAsync(email);
+        }
+
+        /// <summary>
+        /// Persists changes to an existing User entity.
+        /// Uses Identity's UpdateAsync which handles concurrency stamps automatically.
+        /// </summary>
+        public async Task<IdentityResult?> UpdateAsync(User user)
+        {
+            return await _userManager.UpdateAsync(user);
+        }
+
+        public async Task<bool> ValidateCredentialsAsync(string email, string password)
+        {
+            User? user = await _userManager.FindByNameAsync(email);
+            if (user == null)
+            {
+                return false;
+            }
+
+            // Use Identity's built-in password verifier (handles hashing)
+            var result = await _userManager.CheckPasswordAsync(user, password);
+            return result;
         }
 
         //public Task<bool> AddToRoleAsync(int userId, string roleName)

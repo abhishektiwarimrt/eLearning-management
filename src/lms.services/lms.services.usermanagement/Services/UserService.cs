@@ -1,25 +1,28 @@
 ﻿
+using lms.services.usermanagement.UserManagement.V1.CreateUser;
+using lms.services.usermanagement.UserManagement.V1.UpdateUserProfile;
+
 namespace lms.services.usermanagement.Services
 {
-    public class UserService(IUserRepository _userRepository, ILogger<UserService> logger) : IUserService
+    public class UserService(IUserRepository _userRepository, IRoleRepository roleRepository, ILogger<UserService> logger) : IUserService
     {
-        public async Task<bool?> CreateUserAsync(RegisterUserDto registerUserDto)
+        public async Task<bool?> CreateUserAsync(RegisterUserCommand request)
         {
 
-            var user = new User
+            User user = new User
             {
-                UserName = registerUserDto.Email,
-                Email = registerUserDto.Email,
-                FirstName = registerUserDto.FirstName,
-                LastName = registerUserDto.LastName,
-                PasswordHash = registerUserDto.Password,
+                UserName = request.Email,
+                Email = request.Email,
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                PasswordHash = request.Password
                 // Set other properties as needed
             };
-            var createUserresult = await _userRepository.CreateAsync(user);
+            IdentityResult? createUserresult = await _userRepository.CreateAsync(user);
 
             if (createUserresult != null && !createUserresult.Succeeded)
             {
-                var errorMessages = string.Join(Environment.NewLine, createUserresult.Errors.Select(err => $"•{err.Code}: {err.Description}"));
+                string errorMessages = string.Join(Environment.NewLine, createUserresult.Errors.Select(err => $"•{err.Code}: {err.Description}"));
                 logger.LogError(errorMessages);
             }
 
@@ -27,11 +30,57 @@ namespace lms.services.usermanagement.Services
 
         }
 
+        public Task<bool?> CreateUserAsync(RegisterUserDto registerUserDto)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<UserDto?> GetUserByEmailAsync(string email)
         {
-            var user = (await _userRepository.GetUserByEmailAsync(email)) ?? throw new NotFoundException(email);
+            User user = (await _userRepository.GetUserByEmailAsync(email)) ?? throw new NotFoundException(email);
 
             return user.Adapt<UserDto>();
+        }
+
+        /// <summary>
+        /// Updates mutable profile fields on the ASP.NET Identity User entity.
+        /// Only updates non-null fields supplied in the request so partial updates
+        /// are safe — existing values are preserved when a field is omitted.
+        /// </summary>
+        public async Task<bool> UpdateProfileAsync(string email, UpdateUserProfileRequest request)
+        {
+            User user = await _userRepository.GetUserByEmailAsync(email)
+                       ?? throw new NotFoundException($"User '{email}' not found");
+
+            // Map only the fields that the instructor can edit
+            user.FirstName = request.FirstName;
+            user.LastName = request.LastName;
+            user.Headline = request.Headline ?? user.Headline;
+            user.Bio = request.Bio ?? user.Bio;
+            user.Website = request.Website ?? user.Website;
+            user.LinkedInUrl = request.LinkedInUrl ?? user.LinkedInUrl;
+            user.TwitterHandle = request.TwitterHandle ?? user.TwitterHandle;
+            user.Language = request.Language ?? user.Language;
+
+            IdentityResult? result = await _userRepository.UpdateAsync(user);
+
+            if (result != null && !result.Succeeded)
+            {
+                string errors = string.Join(Environment.NewLine,
+                    result.Errors.Select(e => $"• {e.Code}: {e.Description}"));
+                logger.LogError("UpdateProfile failed for {Email}: {Errors}", email, errors);
+                return false;
+            }
+
+            logger.LogInformation("Profile updated for {Email}", email);
+            return true;
+        }
+
+
+        public Task<bool> ValidateUserCredentialsAsync(string email, string password)
+        {
+            Task<bool> isValid = _userRepository.ValidateCredentialsAsync(email, password);
+            return isValid;
         }
 
         //public Task<bool> AddUserToRoleAsync(int userId, string roleName)
@@ -171,10 +220,7 @@ namespace lms.services.usermanagement.Services
         //    throw new NotImplementedException();
         //}
 
-        //public Task<bool> ValidateUserCredentialsAsync(string email, string password)
-        //{
-        //    throw new NotImplementedException();
-        //}
+
 
         //public Task<bool> VerifyEmailAsync(int userId, string token)
         //{

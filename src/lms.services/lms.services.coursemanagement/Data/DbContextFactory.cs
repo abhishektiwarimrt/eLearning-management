@@ -1,5 +1,7 @@
 ﻿
-
+using lms.shared.data.dbcontexts;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
 namespace lms.services.usermanagement.Data
 {
     public class DbContextFactory : IDesignTimeDbContextFactory<CourseDbContext>

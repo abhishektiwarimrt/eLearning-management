@@ -10,6 +10,7 @@ global using lms.services.usermanagement.Exceptions;
 global using lms.services.usermanagement.Services;
 global using lms.shared.common.DTOs.usermanagement;
 global using lms.shared.data.dbcontexts;
+global using lms.shared.data.entities.instructormanagement;
 global using lms.shared.data.entities.usermanagement;
 global using lms.shared.data.repositories.usermanagement;
 global using lms.shared.data.unitofwork;

@@ -1,16 +1,180 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model HomeViewModel
+@{
+    ViewData["Title"] = "LMS - Learn Anything";
+    Layout = "_Layout";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<!-- Pure HTML - No section needed! -->
+<div class="min-h-screen bg-gray-50">
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white py-24 relative overflow-hidden">
+        <div class="absolute inset-0 bg-black/10"></div>
+        <div class="container mx-auto px-6 text-center relative z-10">
+            <h1 class="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+                Learn from the
+                <span class="bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent block">best instructors</span>
+            </h1>
+            <p class="text-xl md:text-2xl mb-12 max-w-3xl mx-auto opacity-90 leading-relaxed">
+                Join <span class="font-bold">@Model.Stats.TotalStudents.ToString("N0")</span> students learning
+                <span class="font-bold">@Model.Stats.TotalCourses.ToString("N0+")</span> courses from
+                <span class="font-bold">@Model.Stats.Instructors.ToString("N0")</span> top instructors
+            </p>
+
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16 max-w-2xl mx-auto">
+                <a href="/courses" class="bg-white text-indigo-600 px-12 py-4 rounded-full font-semibold text-lg shadow-2xl hover:shadow-3xl transform hover:-translate-y-1 hover:scale-105 transition-all duration-300 flex items-center">
+                    <i class="fas fa-play-circle mr-3"></i>
+                    Start Learning
+                </a>
+                <a href="/instructors" class="border-2 border-white/50 hover:border-white px-12 py-4 rounded-full font-semibold text-lg hover:bg-white/20 backdrop-blur-sm transition-all duration-300">
+                    Browse Instructors
+                </a>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-8 md:gap-12 max-w-4xl mx-auto">
+                <div class="bg-white/20 backdrop-blur-xl p-6 rounded-2xl">
+                    <div class="text-4xl md:text-5xl font-bold mb-2">@Model.Stats.TotalCourses.ToString("N0")</div>
+                    <div class="text-lg opacity-90">Online Courses</div>
+                </div>
+                <div class="bg-white/20 backdrop-blur-xl p-6 rounded-2xl">
+                    <div class="text-4xl md:text-5xl font-bold mb-2">@Model.Stats.TotalStudents.ToString("N0")</div>
+                    <div class="text-lg opacity-90">Global Students</div>
+                </div>
+                <div class="bg-white/20 backdrop-blur-xl p-6 rounded-2xl">
+                    <div class="text-4xl md:text-5xl font-bold mb-2">@Model.Stats.Instructors.ToString("N0")</div>
+                    <div class="text-lg opacity-90">Expert Instructors</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Courses -->
+    <section class="py-24 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-20">
+                <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+                    <i class="fas fa-star text-yellow-500 mr-3"></i>
+                    Featured Courses
+                </h2>
+                <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+                    Most popular courses this week. Limited time discounts!
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                @foreach (var course in Model.FeaturedCourses)
+                {
+                    <article class="group bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden hover:-translate-y-3 border border-gray-100 hover:border-indigo-200">
+                        <!-- Course Image -->
+                        <div class="h-56 bg-gradient-to-br from-indigo-500 to-purple-600 group-hover:from-indigo-600 group-hover:to-purple-700 flex items-center justify-center transition-all duration-500 relative overflow-hidden">
+                            <i class="fas fa-play-circle text-white/80 text-5xl group-hover:scale-110 transition-transform"></i>
+                            <div class="absolute top-4 right-4 bg-yellow-400 text-black px-3 py-1 rounded-full text-xs font-bold">
+                                <i class="fas fa-crown mr-1"></i>BESTSELLER
+                            </div>
+                        </div>
+
+                        <!-- Content -->
+                        <div class="p-8">
+                            <h3 class="text-xl font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-indigo-600 transition-colors h-12">
+                                @course.Title
+                            </h3>
+
+                            <div class="flex items-center mb-1">
+                                <i class="fas fa-user text-indigo-600 mr-2"></i>
+                                <span class="text-gray-600 text-sm">@course.Instructor</span>
+                            </div>
+
+                            <!-- Rating -->
+                            <div class="flex items-center mb-6">
+                                <div class="flex text-yellow-400 mr-3">
+                                    <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i>
+                                </div>
+                                <span class="font-semibold text-gray-900">(@course.Rating)</span>
+                                <span class="text-gray-500 text-sm ml-3">(@course.Students.ToString("N0") students)</span>
+                            </div>
+
+                            <!-- Price -->
+                            <div class="flex items-center mb-8">
+                                <span class="text-3xl font-bold text-indigo-600">$@course.Price</span>
+                                <span class="text-xl text-gray-400 line-through ml-4">$@course.OriginalPrice</span>
+                                <span class="ml-auto bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">
+                                    <i class="fas fa-arrow-down mr-1"></i>35% off
+                                </span>
+                            </div>
+
+                            <a href="/course/@course.Id" class="block w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-2xl text-center font-semibold hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300">
+                                <i class="fas fa-arrow-right mr-2"></i>Get Started
+                            </a>
+                        </div>
+                    </article>
+                }
+            </div>
+        </div>
+    </section>
+
+    <!-- Categories -->
+    <section class="py-24 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-20">
+                <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+                    Explore by Category
+                </h2>
+                <p class="text-xl text-gray-600">Choose your learning path</p>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+                @foreach (var category in Model.PopularCategories)
+                {
+                    <a href="/category/@category.Name.ToLower()"
+                       class="group p-8 rounded-2xl border-2 border-gray-100 hover:border-indigo-300 hover:shadow-2xl hover:bg-gradient-to-br hover:from-indigo-50 hover:to-purple-50 transition-all duration-300 text-center h-32 flex flex-col items-center justify-center hover:-translate-y-1">
+
+                        <!-- Font Awesome Icons (No Unicode!) -->
+                        @if (category.Name.Contains("Development"))
+                        {
+                            <i class="fas fa-code text-3xl mb-3 text-gray-500 group-hover:text-indigo-600 transition-colors"></i>
+                        }
+                        else if (category.Name.Contains("Design"))
+                        {
+                            <i class="fas fa-paint-brush text-3xl mb-3 text-gray-500 group-hover:text-indigo-600 transition-colors"></i>
+                        }
+                        else if (category.Name.Contains("Business"))
+                        {
+                            <i class="fas fa-chart-line text-3xl mb-3 text-gray-500 group-hover:text-indigo-600 transition-colors"></i>
+                        }
+                        else
+                        {
+                            <i class="fas fa-graduation-cap text-3xl mb-3 text-gray-500 group-hover:text-indigo-600 transition-colors"></i>
+                        }
+
+                        <div class="font-semibold text-gray-900 group-hover:text-indigo-600 mb-1">@category.Name</div>
+                        <div class="text-sm text-gray-500">@category.CoursesCount.ToString("N0")+ courses</div>
+                    </a>
+                }
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer CTA -->
+    <section class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-20">
+        <div class="container mx-auto px-6 text-center">
+            <h2 class="text-4xl font-bold mb-6">Ready to start learning?</h2>
+            <p class="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
+                Join thousands of students transforming their careers
+            </p>
+            <a href="/Account/register" class="bg-white text-indigo-600 px-12 py-4 rounded-full font-bold text-lg shadow-2xl hover:shadow-3xl transform hover:-translate-y-1 transition-all duration-300 inline-block">
+                <i class="fas fa-user-plus mr-2"></i>Create Free Account
+            </a>
+        </div>
+    </section>
 </div>
 
-@using (Html.BeginForm("ActionName", "ControllerName", FormMethod.Post))
-{
-    @Html.AntiForgeryToken()
-    <!-- Your form fields here -->
-    <button type="submit">Submit</button>
-}
-
+<!-- Custom JS (inline or external - no section!) -->
+<script>
+$(document).ready(function() {
+    // Hover animations
+    $('.course-card').hover(
+        function() { $(this).addClass('shadow-2xl scale-105'); },
+        function() { $(this).removeClass('shadow-2xl scale-105'); }
+    );
+});
+</script>

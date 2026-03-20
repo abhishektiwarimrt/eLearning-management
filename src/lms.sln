@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.2.11415.280 d18.0
+VisualStudioVersion = 18.2.11415.280
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "lms.web", "lms.web", "{6DF035C6-577E-4826-B67A-DAA3DDC61E0C}"
 EndProject
@@ -23,16 +23,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "lms.services.coursemanageme
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "lms.services.aws", "lms.services.aws\lms.services.aws.csproj", "{6053BF31-4334-4066-80F5-E2F965B24EA6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "lms.web", "lms.web\lms.web.csproj", "{FE351A9F-F71F-4677-A2A4-94A4217C3F6D}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Discount.gRPC", "lms.services\lms.services.discount.gRPC\Discount.gRPC\Discount.gRPC.csproj", "{E4887354-B84F-4FBE-A8F1-FDA8F6FE78C2}"
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{5C6DDBCD-5512-44AF-B6B4-24E7CC75CC90}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{AEFFE189-8923-450D-8375-22F5F06AAA05}"
-	ProjectSection(SolutionItems) = preProject
-		Dockerfile = Dockerfile
-	EndProjectSection
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "lms.web", "lms.web\lms.web.csproj", "{CC187B79-2D51-4217-86DD-0B29936161E9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "lms.services.instructor", "lms.services.instructor\lms.services.instructor.csproj", "{E5F9608E-11A0-4FEF-B2F8-D6FF07D606F5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -64,10 +61,6 @@ Global
 		{6053BF31-4334-4066-80F5-E2F965B24EA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6053BF31-4334-4066-80F5-E2F965B24EA6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6053BF31-4334-4066-80F5-E2F965B24EA6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FE351A9F-F71F-4677-A2A4-94A4217C3F6D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FE351A9F-F71F-4677-A2A4-94A4217C3F6D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FE351A9F-F71F-4677-A2A4-94A4217C3F6D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FE351A9F-F71F-4677-A2A4-94A4217C3F6D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E4887354-B84F-4FBE-A8F1-FDA8F6FE78C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E4887354-B84F-4FBE-A8F1-FDA8F6FE78C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E4887354-B84F-4FBE-A8F1-FDA8F6FE78C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -76,6 +69,14 @@ Global
 		{5C6DDBCD-5512-44AF-B6B4-24E7CC75CC90}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5C6DDBCD-5512-44AF-B6B4-24E7CC75CC90}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5C6DDBCD-5512-44AF-B6B4-24E7CC75CC90}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CC187B79-2D51-4217-86DD-0B29936161E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CC187B79-2D51-4217-86DD-0B29936161E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CC187B79-2D51-4217-86DD-0B29936161E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CC187B79-2D51-4217-86DD-0B29936161E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E5F9608E-11A0-4FEF-B2F8-D6FF07D606F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E5F9608E-11A0-4FEF-B2F8-D6FF07D606F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E5F9608E-11A0-4FEF-B2F8-D6FF07D606F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E5F9608E-11A0-4FEF-B2F8-D6FF07D606F5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -87,8 +88,9 @@ Global
 		{331C1B3B-CAEC-46EA-B8B6-45A83C52217C} = {EC892162-8CBB-455A-A027-FD54B28C2687}
 		{8DD07D5F-591D-41F8-911B-C3C9E678387C} = {EC892162-8CBB-455A-A027-FD54B28C2687}
 		{6053BF31-4334-4066-80F5-E2F965B24EA6} = {EC892162-8CBB-455A-A027-FD54B28C2687}
-		{FE351A9F-F71F-4677-A2A4-94A4217C3F6D} = {6DF035C6-577E-4826-B67A-DAA3DDC61E0C}
 		{E4887354-B84F-4FBE-A8F1-FDA8F6FE78C2} = {EC892162-8CBB-455A-A027-FD54B28C2687}
+		{CC187B79-2D51-4217-86DD-0B29936161E9} = {6DF035C6-577E-4826-B67A-DAA3DDC61E0C}
+		{E5F9608E-11A0-4FEF-B2F8-D6FF07D606F5} = {EC892162-8CBB-455A-A027-FD54B28C2687}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DBF60729-866C-4ED0-BD65-604A36C1D4FB}

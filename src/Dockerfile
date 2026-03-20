@@ -30,5 +30,11 @@ RUN dotnet publish "./lms.services.coursemanagement.csproj" -c $BUILD_CONFIGURAT
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final
 WORKDIR /app
+COPY ./certs/https/localhost.pfx ./https/localhost.pfx
 COPY --from=publish /app/publish .
+ENV ASPNETCORE_URLS="https://+:443;http://+:80"
+ENV ASPNETCORE_HTTPS_PORT=443
+ENV ASPNETCORE_Kestrel__Certificates__Default__Path=/app/https/localhost.pfx
+ENV ASPNETCORE_Kestrel__Certificates__Default__Password="Knp@123"
 ENTRYPOINT ["dotnet", "lms.services.coursemanagement.dll"]
+
