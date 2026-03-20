@@ -22,9 +22,9 @@ namespace lms.buildingblocks.OpenAPI
 
         public void Configure(SwaggerGenOptions options)
         {
-            foreach (var description in _apiVersionDescriptionProvider.ApiVersionDescriptions)
+            foreach (ApiVersionDescription description in _apiVersionDescriptionProvider.ApiVersionDescriptions)
             {
-                var openApiInfo = new OpenApiInfo
+                OpenApiInfo openApiInfo = new OpenApiInfo
                 {
                     Title = $"eLearning Management API v{description.ApiVersion}",
                     Version = description.ApiVersion.ToString(),
@@ -33,7 +33,7 @@ namespace lms.buildingblocks.OpenAPI
                     {
                         Name = "Abhishek Tiwari",
                         Email = "abhishektiwarimrt@gmail.com",
-                        Url = new Uri("https://yourwebsite.com"),
+                        Url = new Uri("https://abhishek-tiwari-g3r1v88.gamma.site/"),
                     }
                 };
 
