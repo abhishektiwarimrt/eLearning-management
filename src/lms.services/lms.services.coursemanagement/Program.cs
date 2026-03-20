@@ -1,10 +1,11 @@
 using Amazon.S3;
 using Amazon.SQS;
+using Asp.Versioning.ApiExplorer;
 using lms.buildingblocks.middleware;
 using lms.services.aws.S3;
 using lms.services.aws.SQS;
-using lms.services.coursemanagement.Services;
 using Serilog;
+using System.Reflection;
 
 namespace lms.services.coursemanagement
 {
@@ -12,8 +13,8 @@ namespace lms.services.coursemanagement
     {
         public static void Main(string[] args)
         {
-            var assembly = typeof(Program).Assembly;
-            var app = ConfigureApi(
+            Assembly assembly = typeof(Program).Assembly;
+            WebApplication app = ConfigureApi(
                 args,
                 configureServices: builder =>
                 {
@@ -57,19 +58,19 @@ namespace lms.services.coursemanagement
                         //var secretKey = builder.Configuration.GetSection("AWS:SecretKey").Value ?? throw new ArgumentNullException(typeof(S3ServiceEvent).Name, "SecretKey not found");
                         var s3BucketName = builder.Configuration.GetSection("AWS:S3Bucket:Name").Value ?? throw new ArgumentNullException(typeof(S3ServiceEvent).Name, "S3Bucket:Name not found");
                         //var s3BucketRegion = builder.Configuration.GetSection("AWS:S3Bucket:Region").Value ?? throw new ArgumentNullException(typeof(S3ServiceEvent).Name, "S3Bucket:Region not found"); ;
-                        var s3Client = sp.GetRequiredService<IAmazonS3>();
+                        IAmazonS3 s3Client = sp.GetRequiredService<IAmazonS3>();
                         return new S3ServiceEvent(s3Client, s3BucketName);
                     });
 
                     builder.Services.AddScoped<ISqsServiceEvent>(sp =>
                     {
-                        var sqsClient = sp.GetRequiredService<IAmazonSQS>();
-                        var configuration = sp.GetRequiredService<IConfiguration>();
+                        IAmazonSQS sqsClient = sp.GetRequiredService<IAmazonSQS>();
+                        IConfiguration configuration = sp.GetRequiredService<IConfiguration>();
                         return new SqsServiceEvent(sqsClient, configuration);
                     });
                     //builder.Services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
                     //builder.Services.AddHostedService<FileUploadWorkerService>();
-                    
+
 
 
                     builder.Services.AddExceptionHandler<CustomExceptionHandler>();
@@ -79,7 +80,7 @@ namespace lms.services.coursemanagement
 
 
                     // Read Serilog configuration from appsettings.json
-                    var configuration = new ConfigurationBuilder()
+                    IConfigurationRoot configuration = new ConfigurationBuilder()
                         .SetBasePath(Directory.GetCurrentDirectory())
                         .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                         .Build();
@@ -99,27 +100,28 @@ namespace lms.services.coursemanagement
                     if (app.Environment.IsDevelopment())
                     {
                         app.UseDeveloperExceptionPage();
-                        try
-                        {
-                            app.UseSwagger();
-                            var descriptons = app.DescribeApiVersions();
-                            app.UseSwaggerUI(c =>
-                            {
-                                foreach (var description in descriptons)
-                                {
-                                    string url = $"/swagger/{description.GroupName}/swagger.json";
-                                    string name = description.GroupName.ToUpperInvariant();
-                                    c.SwaggerEndpoint(url, name);
-                                }
-
-                                c.RoutePrefix = string.Empty; // Serve the Swagger UI at the app's root
-                            });
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"Error configuring Swagger: {ex.Message}");
-                        }
                     }
+                    try
+                    {
+                        app.UseSwagger();
+                        IReadOnlyList<ApiVersionDescription> descriptons = app.DescribeApiVersions();
+                        app.UseSwaggerUI(c =>
+                        {
+                            foreach (ApiVersionDescription description in descriptons)
+                            {
+                                string url = $"/swagger/{description.GroupName}/swagger.json";
+                                string name = description.GroupName.ToUpperInvariant();
+                                c.SwaggerEndpoint(url, name);
+                            }
+
+                            c.RoutePrefix = string.Empty; // Serve the Swagger UI at the app's root
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error configuring Swagger: {ex.Message}");
+                    }
+
                     app.UseExceptionHandler(options => { });
                     app.UseMiddleware<RateLimitingMiddleware>();
                     // You can also add custom endpoints here if needed
