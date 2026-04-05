@@ -1,0 +1,14 @@
+2026-04-05 13:08:25.503 +05:30 [ERR] An unhandled exception has occurred while executing the request.
+System.MissingMethodException: Method not found: 'System.Collections.Generic.IDictionary`2<System.String,Microsoft.OpenApi.OpenApiMediaType> Microsoft.OpenApi.IOpenApiRequestBody.get_Content()'.
+   at Swashbuckle.AspNetCore.SwaggerGen.SwaggerGenerator.GenerateOpenApiOperationFromMetadataAsync(ApiDescription apiDescription, SchemaRepository schemaRepository, OpenApiDocument document)
+   at Swashbuckle.AspNetCore.SwaggerGen.SwaggerGenerator.GenerateOpenApiOperationFromMetadataAsync(ApiDescription apiDescription, SchemaRepository schemaRepository, OpenApiDocument document)
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
+   at Swashbuckle.AspNetCore.SwaggerGen.SwaggerGenerator.GenerateOpenApiOperationFromMetadataAsync(ApiDescription apiDescription, SchemaRepository schemaRepository, OpenApiDocument document)
+   at Swashbuckle.AspNetCore.SwaggerGen.SwaggerGenerator.GenerateOperationAsync(OpenApiDocument document, ApiDescription apiDescription, SchemaRepository schemaRepository, Func`4 parametersGenerator, Func`4 bodyGenerator, Func`3 applyFilters)
+   at Swashbuckle.AspNetCore.SwaggerGen.SwaggerGenerator.GenerateOperationAsync(OpenApiDocument document, ApiDescription apiDescription, SchemaRepository schemaRepository)
+   at Swashbuckle.AspNetCore.SwaggerGen.SwaggerGenerator.GenerateOperationsAsync(OpenApiDocument document, IEnumerable`1 apiDescriptions, SchemaRepository schemaRepository)
+   at Swashbuckle.AspNetCore.SwaggerGen.SwaggerGenerator.GeneratePathsAsync(OpenApiDocument document, IEnumerable`1 apiDescriptions, SchemaRepository schemaRepository, Func`4 operationsGenerator)
+   at Swashbuckle.AspNetCore.SwaggerGen.SwaggerGenerator.GeneratePathsAsync(OpenApiDocument document, IEnumerable`1 apiDescriptions, SchemaRepository schemaRepository)
+   at Swashbuckle.AspNetCore.SwaggerGen.SwaggerGenerator.GetSwaggerAsync(String documentName, String host, String basePath)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddlewareImpl.Invoke(HttpContext context)

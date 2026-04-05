@@ -1,17 +1,11 @@
-using lms.web.Apis;
 using lms.web.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-using Refit;
-
-using System.Text;
 
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
+// Add service defaults & Aspire client integrations.
+builder.AddServiceDefaults();
 // Add services to the container.
 // JWT Authentication (usermanagement microservice)
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -67,8 +61,8 @@ builder.Services.AddSingleton<UserManagementService>();
 
 
 builder.Services.AddControllersWithViews();
-var app = builder.Build();
-
+WebApplication app = builder.Build();
+app.MapDefaultEndpoints();
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {

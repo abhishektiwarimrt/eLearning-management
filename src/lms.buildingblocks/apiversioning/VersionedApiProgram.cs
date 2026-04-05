@@ -1,5 +1,6 @@
 ﻿using Carter;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Hosting;
 
 namespace lms.buildingblocks.apiversioning
 {
@@ -10,8 +11,9 @@ namespace lms.buildingblocks.apiversioning
             Action<WebApplicationBuilder>? configureServices = null,
             Action<WebApplication>? configureApp = null)
         {
-            var builder = WebApplication.CreateBuilder(args);
-
+            WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+            // Add service defaults & Aspire client integrations.
+            builder.AddServiceDefaults();
             // Add default services           
             builder.Services.AddCarter();
             builder.Services.AddVersionedApi();
@@ -19,8 +21,8 @@ namespace lms.buildingblocks.apiversioning
             // Allow additional service configuration
             configureServices?.Invoke(builder);
 
-            var app = builder.Build();
-
+            WebApplication app = builder.Build();
+            app.MapDefaultEndpoints();
             // Add default middleware
             app.MapCarter();
 

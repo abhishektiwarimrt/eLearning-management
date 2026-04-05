@@ -56,7 +56,7 @@ namespace lms.services.coursemanagement
                     {
                         //var acessKey = builder.Configuration.GetSection("AWS:AccessKey").Value ?? throw new ArgumentNullException(typeof(S3ServiceEvent).Name, "AccessKey not found");
                         //var secretKey = builder.Configuration.GetSection("AWS:SecretKey").Value ?? throw new ArgumentNullException(typeof(S3ServiceEvent).Name, "SecretKey not found");
-                        var s3BucketName = builder.Configuration.GetSection("AWS:S3Bucket:Name").Value ?? throw new ArgumentNullException(typeof(S3ServiceEvent).Name, "S3Bucket:Name not found");
+                        string s3BucketName = builder.Configuration.GetSection("AWS:S3Bucket:Name").Value ?? throw new ArgumentNullException(typeof(S3ServiceEvent).Name, "S3Bucket:Name not found");
                         //var s3BucketRegion = builder.Configuration.GetSection("AWS:S3Bucket:Region").Value ?? throw new ArgumentNullException(typeof(S3ServiceEvent).Name, "S3Bucket:Region not found"); ;
                         IAmazonS3 s3Client = sp.GetRequiredService<IAmazonS3>();
                         return new S3ServiceEvent(s3Client, s3BucketName);

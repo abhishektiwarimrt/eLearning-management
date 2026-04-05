@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using StackExchange.Redis;
+using System.Net;
 using System.Text.Json;
 
 namespace lms.buildingblocks.middleware
@@ -63,7 +64,7 @@ namespace lms.buildingblocks.middleware
         /// <returns>Task representing the asynchronous operation</returns>
         public async Task InvokeAsync(HttpContext context)
         {
-            var clientKey = GetClientKey(context);
+            string? clientKey = GetClientKey(context);
 
             if (string.IsNullOrEmpty(clientKey))
             {
@@ -96,14 +97,14 @@ namespace lms.buildingblocks.middleware
         private static string? GetClientKey(HttpContext context)
         {
             // Prioritize authentication if available
-            var userId = context.User.FindFirst(c => c.Type == "sub")?.Value;
+            string? userId = context.User.FindFirst(c => c.Type == "sub")?.Value;
             if (!string.IsNullOrEmpty(userId))
             {
                 return $"ratelimit:user:{userId}";
             }
 
             // Fallback to IP address
-            var ipAddress = context.Connection.RemoteIpAddress;
+            IPAddress? ipAddress = context.Connection.RemoteIpAddress;
             return ipAddress != null
                 ? $"ratelimit:ip:{ipAddress}"
                 : null;
@@ -131,10 +132,10 @@ namespace lms.buildingblocks.middleware
         /// </summary>
         private async Task<bool> FixedWindowRateLimit(string clientKey)
         {
-            var now = DateTimeOffset.UtcNow;
-            var windowKey = $"{clientKey}:fixed:{now.ToUnixTimeSeconds() / _configuration.WindowSeconds}";
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            string windowKey = $"{clientKey}:fixed:{now.ToUnixTimeSeconds() / _configuration.WindowSeconds}";
 
-            var requestCount = await _redisDb.StringIncrementAsync(windowKey, 1);
+            long requestCount = await _redisDb.StringIncrementAsync(windowKey, 1);
             await _redisDb.KeyExpireAsync(windowKey, TimeSpan.FromSeconds(_configuration.WindowSeconds));
 
             return requestCount <= _configuration.MaxRequests;
@@ -145,17 +146,17 @@ namespace lms.buildingblocks.middleware
         /// </summary>
         private async Task<bool> SlidingWindowRateLimit(string clientKey)
         {
-            var now = DateTimeOffset.UtcNow;
-            var windowKey = $"{clientKey}:sliding";
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            string windowKey = $"{clientKey}:sliding";
 
             // Store timestamps as a sorted set
             await _redisDb.SortedSetAddAsync(windowKey, now.ToUnixTimeMilliseconds().ToString(), now.ToUnixTimeMilliseconds());
 
             // Remove timestamps outside the window
-            var oldestAllowedTime = now.AddSeconds(-_configuration.WindowSeconds).ToUnixTimeMilliseconds();
+            long oldestAllowedTime = now.AddSeconds(-_configuration.WindowSeconds).ToUnixTimeMilliseconds();
             await _redisDb.SortedSetRemoveRangeByScoreAsync(windowKey, 0, oldestAllowedTime);
 
-            var requestCount = await _redisDb.SortedSetLengthAsync(windowKey);
+            long requestCount = await _redisDb.SortedSetLengthAsync(windowKey);
             await _redisDb.KeyExpireAsync(windowKey, TimeSpan.FromSeconds(_configuration.WindowSeconds));
 
             return requestCount <= _configuration.MaxRequests;
@@ -166,14 +167,14 @@ namespace lms.buildingblocks.middleware
         /// </summary>
         private async Task<bool> TokenBucketRateLimit(string clientKey)
         {
-            var bucketKey = $"{clientKey}:tokenbucket";
-            var now = DateTimeOffset.UtcNow;
+            string bucketKey = $"{clientKey}:tokenbucket";
+            DateTimeOffset now = DateTimeOffset.UtcNow;
 
             // Retrieve or initialize bucket state
-            var bucketState = await GetBucketState(bucketKey);
+            BucketState bucketState = await GetBucketState(bucketKey);
 
             // Calculate tokens to add based on time elapsed
-            var tokensToAdd = CalculateTokens(bucketState, now);
+            int tokensToAdd = CalculateTokens(bucketState, now);
 
             // Update bucket state if tokens can be added
             if (tokensToAdd > 0)
@@ -201,14 +202,14 @@ namespace lms.buildingblocks.middleware
         /// </summary>
         private async Task<bool> LeakyBucketRateLimit(string clientKey)
         {
-            var bucketKey = $"{clientKey}:leakybucket";
-            var now = DateTimeOffset.UtcNow;
+            string bucketKey = $"{clientKey}:leakybucket";
+            DateTimeOffset now = DateTimeOffset.UtcNow;
 
             // Retrieve or initialize bucket state
-            var bucketState = await GetBucketState(bucketKey);
+            BucketState bucketState = await GetBucketState(bucketKey);
 
             // Calculate tokens to remove based on time elapsed
-            var tokensToRemove = CalculateTokens(bucketState, now);
+            int tokensToRemove = CalculateTokens(bucketState, now);
 
             // Update bucket state by removing tokens
             bucketState.Tokens = Math.Max(0, bucketState.Tokens - tokensToRemove);
@@ -230,7 +231,7 @@ namespace lms.buildingblocks.middleware
         /// </summary>
         private int CalculateTokens(BucketState state, DateTimeOffset now)
         {
-            var elapsedTime = now - state.LastUpdateTime;
+            TimeSpan elapsedTime = now - state.LastUpdateTime;
             return (int)(elapsedTime.TotalSeconds * (_configuration.MaxRequests / (double)_configuration.WindowSeconds));
         }
 
@@ -239,11 +240,13 @@ namespace lms.buildingblocks.middleware
         /// </summary>
         private async Task<BucketState> GetBucketState(string bucketKey)
         {
-            var serializedState = await _redisDb.StringGetAsync(bucketKey);
+            RedisValue serializedState = await _redisDb.StringGetAsync(bucketKey);
 
             if (serializedState.HasValue)
             {
-                return JsonSerializer.Deserialize<BucketState>(serializedState) ?? new BucketState
+                // explicit conversion to string to avoid overload ambiguity
+                string json = serializedState.ToString();
+                return JsonSerializer.Deserialize<BucketState>(json) ?? new BucketState
                 {
                     Tokens = _configuration.MaxRequests,
                     LastUpdateTime = DateTimeOffset.UtcNow
@@ -262,7 +265,7 @@ namespace lms.buildingblocks.middleware
         /// </summary>
         private async Task SaveBucketState(string bucketKey, BucketState state)
         {
-            var serializedState = JsonSerializer.Serialize(state);
+            string serializedState = JsonSerializer.Serialize(state);
             await _redisDb.StringSetAsync(bucketKey, serializedState, TimeSpan.FromSeconds(_configuration.WindowSeconds));
         }
 
