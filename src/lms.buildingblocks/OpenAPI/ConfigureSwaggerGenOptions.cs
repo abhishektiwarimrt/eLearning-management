@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using System.Reflection;
 
 namespace lms.buildingblocks.OpenAPI
 {
@@ -24,11 +25,14 @@ namespace lms.buildingblocks.OpenAPI
         {
             foreach (ApiVersionDescription description in _apiVersionDescriptionProvider.ApiVersionDescriptions)
             {
+                // Use the entry assembly name so each application/project shows its own title/description
+                string appName = Assembly.GetEntryAssembly()?.GetName().Name ?? "API";
+
                 OpenApiInfo openApiInfo = new OpenApiInfo
                 {
-                    Title = $"eLearning Management API v{description.ApiVersion}",
+                    Title = $"{appName} API v{description.ApiVersion}",
                     Version = description.ApiVersion.ToString(),
-                    Description = $"Microservices for eLearning Management - {description.ApiVersion}",
+                    Description = $"{appName} - Microservices for {appName} - {description.ApiVersion}",
                     Contact = new OpenApiContact
                     {
                         Name = "Abhishek Tiwari",
@@ -38,7 +42,7 @@ namespace lms.buildingblocks.OpenAPI
                 };
 
                 options.SwaggerDoc(description.GroupName, openApiInfo);
-                //options.OperationFilter<SwaggerFileOperationFilter>();
+                options.OperationFilter<SwaggerFileOperationFilter>();
                 //options.AddSecurityDefinition("multipart/form-data",
                 //   new OpenApiSecurityScheme
                 //   {

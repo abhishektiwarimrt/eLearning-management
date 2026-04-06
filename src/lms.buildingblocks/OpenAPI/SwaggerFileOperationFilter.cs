@@ -13,12 +13,12 @@ namespace lms.buildingblocks.OpenAPI
                 .Where(p => p.ParameterType == typeof(IFormFile) || p.ParameterType == typeof(IFormFileCollection))
                 .ToList();
 
-            if (fileParams.Any())
+            if (fileParams.Count > 0)
             {
-                operation.Parameters.Clear();
+                operation.Parameters?.Clear();
                 operation.RequestBody = new OpenApiRequestBody
                 {
-                    Content = new Dictionary<string, IOpenApiMediaType>
+                    Content = new Dictionary<string, OpenApiMediaType>
                     {
                         ["multipart/form-data"] = new OpenApiMediaType
                         {

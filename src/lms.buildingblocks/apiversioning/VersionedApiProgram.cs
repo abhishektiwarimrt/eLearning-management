@@ -13,18 +13,18 @@ namespace lms.buildingblocks.apiversioning
         {
             WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
             // Add service defaults & Aspire client integrations.
-            builder.AddServiceDefaults();
+            _ = builder.AddServiceDefaults();
             // Add default services           
-            builder.Services.AddCarter();
-            builder.Services.AddVersionedApi();
+            _ = builder.Services.AddCarter();
+            _ = builder.Services.AddVersionedApi();
 
             // Allow additional service configuration
             configureServices?.Invoke(builder);
 
             WebApplication app = builder.Build();
-            app.MapDefaultEndpoints();
+            _ = app.MapDefaultEndpoints();
             // Add default middleware
-            app.MapCarter();
+            _ = app.MapCarter();
 
             // Allow additional app configuration
             configureApp?.Invoke(app);
