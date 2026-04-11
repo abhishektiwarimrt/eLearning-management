@@ -1,4 +1,4 @@
-﻿using lms.buildingblocks.RequestResponse;
+using lms.buildingblocks.RequestResponse;
 using lms.shared.common.DTOs.usermanagement;
 using lms.web.Models;
 using System.Text;
@@ -13,30 +13,13 @@ namespace lms.web.Services
         private readonly JsonSerializerOptions _jsonOptions;
         private readonly ILogger<UserManagementService> _logger;
 
-        public UserManagementService(IConfiguration config, ILogger<UserManagementService> logger)
+        // Named HttpClient registered in Program.cs with JwtForwardingHandler
+        public const string HttpClientName = "UserManagement";
+
+        public UserManagementService(IHttpClientFactory httpClientFactory, ILogger<UserManagementService> logger)
         {
             _logger = logger;
-
-            // Aspire injects service URLs as services__usermanagement__https__0 (preferred) or http__0
-            // Falls back to appsettings MicroServices:UserManagementUrl for non-Aspire runs
-            string baseUrl =
-                config["services__usermanagement__https__0"] ??
-                config["services__usermanagement__http__0"] ??
-                config["MicroServices:UserManagementUrl"] ??
-                "https://localhost:5050/";
-
-            if (!baseUrl.EndsWith('/'))
-                baseUrl += '/';
-
-            _httpClient = new HttpClient(new HttpClientHandler
-            {
-                // Trust the ASP.NET Core dev certificate in local Aspire runs
-                ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-            })
-            {
-                BaseAddress = new Uri(baseUrl)
-            };
-
+            _httpClient = httpClientFactory.CreateClient(HttpClientName);
             _jsonOptions = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true,
@@ -74,9 +57,6 @@ namespace lms.web.Services
 
         public async Task<HttpResponseMessage> RegisterAsync(RegisterUserDto user)
         {
-            //HttpResponseMessage response = await _httpClient.PostAsync("api/v1/user", ToJsonContent(user));
-            //response.EnsureSuccessStatusCode();
-            //return response;
             string json = JsonSerializer.Serialize(user, _jsonOptions);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
@@ -139,10 +119,6 @@ namespace lms.web.Services
 
         // ── Onboarding ────────────────────────────────────────────────────────
 
-        /// <summary>
-        /// GET /api/v1/user/{email}/onboarding
-        /// Returns null if the user has never started onboarding.
-        /// </summary>
         public async Task<OnboardingStatusDto?> GetOnboardingStatusAsync(string email)
         {
             try
@@ -163,10 +139,6 @@ namespace lms.web.Services
             }
         }
 
-        /// <summary>
-        /// POST /api/v1/user/{email}/onboarding
-        /// Saves step data. Pass isComplete=true on step 4 to finalize and assign role.
-        /// </summary>
         public async Task<bool> SaveOnboardingStepAsync(string email, OnboardingViewModel model, bool isComplete)
         {
             var payload = new

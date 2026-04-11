@@ -1,4 +1,4 @@
-﻿using Carter;
+using Carter;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
 

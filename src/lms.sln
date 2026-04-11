@@ -25,8 +25,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "lms.services.aws", "lms.ser
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Discount.gRPC", "lms.services\lms.services.discount.gRPC\Discount.gRPC\Discount.gRPC.csproj", "{E4887354-B84F-4FBE-A8F1-FDA8F6FE78C2}"
 EndProject
-Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{5C6DDBCD-5512-44AF-B6B4-24E7CC75CC90}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "lms.web", "lms.web\lms.web.csproj", "{CC187B79-2D51-4217-86DD-0B29936161E9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "lms.services.instructor", "lms.services.instructor\lms.services.instructor.csproj", "{E5F9608E-11A0-4FEF-B2F8-D6FF07D606F5}"
@@ -71,10 +69,6 @@ Global
 		{E4887354-B84F-4FBE-A8F1-FDA8F6FE78C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E4887354-B84F-4FBE-A8F1-FDA8F6FE78C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E4887354-B84F-4FBE-A8F1-FDA8F6FE78C2}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5C6DDBCD-5512-44AF-B6B4-24E7CC75CC90}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5C6DDBCD-5512-44AF-B6B4-24E7CC75CC90}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5C6DDBCD-5512-44AF-B6B4-24E7CC75CC90}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5C6DDBCD-5512-44AF-B6B4-24E7CC75CC90}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CC187B79-2D51-4217-86DD-0B29936161E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{CC187B79-2D51-4217-86DD-0B29936161E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CC187B79-2D51-4217-86DD-0B29936161E9}.Release|Any CPU.ActiveCfg = Release|Any CPU

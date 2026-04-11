@@ -47,9 +47,12 @@ namespace lms.services.coursemanagement.Features.V1.CourseSection.Create
                    return Results.Created($"/{ApiName}/{response.CourseSectionsCreated}", apiResponse);
 
                })
+               .RequireAuthorization(policy => policy.RequireRole("Instructor", "Admin"))
                .MapToApiVersion(1, 0)
                .Produces<CreateCourseSectionsResponse>(StatusCodes.Status201Created)
                .ProducesProblem(StatusCodes.Status400BadRequest)
+               .ProducesProblem(StatusCodes.Status401Unauthorized)
+               .ProducesProblem(StatusCodes.Status403Forbidden)
                .WithSummary("Create Course Sections")
                .WithDescription("Create Course Sections");
         }

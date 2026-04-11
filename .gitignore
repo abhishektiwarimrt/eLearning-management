@@ -364,3 +364,4 @@ FodyWeavers.xsd
 /src/lms.services/lms.services.discount.gRPC/Discount.gRPC/discountdb
 /src/lms.services/lms.services.discount.gRPC/Discount.gRPC/discountdb-shm
 /src/lms.services/lms.services.discount.gRPC/Discount.gRPC/discountdb-wal
+/src/lms.services/lms.services.coursemanagement/#{SERILOG_LOG_PATH}#20260412

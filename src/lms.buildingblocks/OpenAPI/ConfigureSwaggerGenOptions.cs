@@ -23,6 +23,20 @@ namespace lms.buildingblocks.OpenAPI
 
         public void Configure(SwaggerGenOptions options)
         {
+            // ── JWT Bearer security definition (shared across all versions) ──
+            options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                Type = SecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT",
+                In = ParameterLocation.Header,
+                Name = "Authorization",
+                Description = "Enter your JWT token below. Obtain it from POST /api/v1/Auth/Login.\n\nExample: eyJhbGci..."
+            });
+
+            // Apply Bearer security to every operation via a document filter (runs after doc is fully built)
+            options.DocumentFilter<BearerSecurityDocumentFilter>();
+
             foreach (ApiVersionDescription description in _apiVersionDescriptionProvider.ApiVersionDescriptions)
             {
                 // Use the entry assembly name so each application/project shows its own title/description
@@ -43,15 +57,6 @@ namespace lms.buildingblocks.OpenAPI
 
                 options.SwaggerDoc(description.GroupName, openApiInfo);
                 options.OperationFilter<SwaggerFileOperationFilter>();
-                //options.AddSecurityDefinition("multipart/form-data",
-                //   new OpenApiSecurityScheme
-                //   {
-                //       Type = SecuritySchemeType.ApiKey,
-                //       In = ParameterLocation.Header,
-                //       Name = "Content-Type",
-                //       Description = "Upload files using multipart/form-data"
-                //   });
-
             }
         }
     }

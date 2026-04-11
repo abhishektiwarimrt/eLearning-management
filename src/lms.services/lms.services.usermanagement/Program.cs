@@ -2,7 +2,10 @@ using Asp.Versioning.ApiExplorer;
 using lms.buildingblocks.middleware;
 using lms.buildingblocks.OpenAPI;
 using lms.shared.data.repositories.instructormanagement;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using System.Reflection;
+using System.Text;
 
 namespace lms.services.usermanagement
 {
@@ -16,15 +19,6 @@ namespace lms.services.usermanagement
                 configureServices: builder =>
                 {
                     // Add custom services
-                    // Add services to the container
-                    builder.Services.AddMediatR(config =>
-                    {
-                        config.RegisterServicesFromAssemblies(assembly);
-                        config.AddOpenBehavior(typeof(ValidationBehavior<,>));
-                        config.AddOpenBehavior(typeof(LogBehavior<,>));
-                    });
-                    builder.Services.AddValidatorsFromAssembly(assembly);
-                    // Add services to the container
                     builder.Services.AddMediatR(config =>
                     {
                         config.RegisterServicesFromAssemblies(assembly);
@@ -36,18 +30,47 @@ namespace lms.services.usermanagement
                         options.UseNpgsql(builder.Configuration.GetConnectionString("UserDatabase"),
                         x => x.MigrationsAssembly("lms.shared.data")));
 
+                    // AddIdentity registers cookie auth internally — must come BEFORE we
+                    // override the default scheme to JWT, otherwise Identity wins.
                     builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
                     {
-                        //password rules
                         options.Password.RequireDigit = true;
                         options.Password.RequiredLength = 10;
                         options.Password.RequireNonAlphanumeric = true;
-
-                        //locaout (prevent brute force)
                         options.Lockout.MaxFailedAccessAttempts = 5;
                     })
                     .AddEntityFrameworkStores<UserDbContext>()
                     .AddDefaultTokenProviders();
+
+                    // Override the default scheme that AddIdentity set back to cookies.
+                    // JWT Bearer must be the default so API endpoints return 401, not redirect.
+                    var jwtSection = builder.Configuration.GetSection("Jwt");
+                    var jwtKey = jwtSection["Key"];
+                    if (!string.IsNullOrWhiteSpace(jwtKey))
+                    {
+                        builder.Services
+                            .AddAuthentication(options =>
+                            {
+                                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                            })
+                            .AddJwtBearer(options =>
+                            {
+                                options.TokenValidationParameters = new TokenValidationParameters
+                                {
+                                    ValidateIssuer = true,
+                                    ValidateAudience = true,
+                                    ValidateLifetime = true,
+                                    ValidateIssuerSigningKey = true,
+                                    ValidIssuer = jwtSection["Issuer"],
+                                    ValidAudience = jwtSection["Audience"],
+                                    IssuerSigningKey = new SymmetricSecurityKey(
+                                        Encoding.UTF8.GetBytes(jwtKey)),
+                                    ClockSkew = TimeSpan.FromMinutes(1)
+                                };
+                            });
+                        builder.Services.AddAuthorization();
+                    }
 
                     builder.Services.AddScoped<IUserService, UserService>();
                     builder.Services.AddScoped<IRoleService, RoleService>();
@@ -60,25 +83,9 @@ namespace lms.services.usermanagement
                     builder.Services.AddEndpointsApiExplorer();
                     builder.Services.AddSwaggerGen();
                     builder.Services.ConfigureOptions<ConfigureSwaggerGenOptions>();
-
-                    // Read Serilog configuration from appsettings.json
-                    IConfigurationRoot configuration = new ConfigurationBuilder()
-                        .SetBasePath(Directory.GetCurrentDirectory())
-                        .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                        .Build();
-
-                    //Log.Logger = new LoggerConfiguration()
-                    //    .ReadFrom.Configuration(configuration)
-                    //    .CreateLogger();
-
-                    //builder.Services.AddLogging(loggingBuilder =>
-                    //    loggingBuilder.AddSerilog(dispose: true));
                 },
                 configureApp: app =>
                 {
-                    // Add custom middleware
-                    //if (app.Environment.IsDevelopment())
-                    //{
                     app.UseDeveloperExceptionPage();
                     try
                     {
@@ -92,18 +99,17 @@ namespace lms.services.usermanagement
                                 string name = description.GroupName.ToUpperInvariant();
                                 c.SwaggerEndpoint(url, name);
                             }
-
-                            c.RoutePrefix = string.Empty; // Serve the Swagger UI at the app's root
+                            c.RoutePrefix = string.Empty;
                         });
                     }
                     catch (Exception ex)
                     {
                         Console.WriteLine($"Error configuring Swagger: {ex.Message}");
                     }
-                    //}
                     app.UseExceptionHandler(options => { });
+                    app.UseAuthentication();
+                    app.UseAuthorization();
                     app.UseMiddleware<RateLimitingMiddleware>();
-                    // You can also add custom endpoints here if needed
                     app.MapGet("/health", () => "Healthy");
                 }
             );

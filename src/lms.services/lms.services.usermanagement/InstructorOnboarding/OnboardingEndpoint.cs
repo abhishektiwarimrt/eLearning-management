@@ -76,9 +76,11 @@ namespace lms.services.usermanagement.InstructorOnboarding
                         Metadata = new Metadata { Timestamp = DateTime.UtcNow, Version = ApiVersion.ToString() }
                     });
                 })
+                .RequireAuthorization()
                 .MapToApiVersion(1, 0)
                 .Produces<ApiResponse<SaveOnboardingStepResponse>>(StatusCodes.Status200OK)
                 .ProducesProblem(StatusCodes.Status400BadRequest)
+                .ProducesProblem(StatusCodes.Status401Unauthorized)
                 .WithSummary("Save Onboarding Step")
                 .WithDescription("Upserts onboarding progress. Set IsComplete=true on final step to assign Instructor role.");
 
@@ -99,8 +101,10 @@ namespace lms.services.usermanagement.InstructorOnboarding
                         Metadata = new Metadata { Timestamp = DateTime.UtcNow, Version = ApiVersion.ToString() }
                     });
                 })
+                .RequireAuthorization()
                 .MapToApiVersion(1, 0)
                 .Produces<ApiResponse<GetOnboardingStatusResponse>>(StatusCodes.Status200OK)
+                .ProducesProblem(StatusCodes.Status401Unauthorized)
                 .WithSummary("Get Onboarding Status")
                 .WithDescription("Returns onboarding status and step data so the web can resume where the user left off.");
         }

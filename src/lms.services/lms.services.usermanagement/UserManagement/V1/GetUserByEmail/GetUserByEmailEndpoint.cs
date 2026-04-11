@@ -40,9 +40,11 @@ namespace lms.services.usermanagement.UserManagement.V1.GetUserByEmail
                 return Results.Ok(apiResponse);
 
             })
+             .RequireAuthorization()
              .MapToApiVersion(1)
             .Produces<GetUserByEmailResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
             .WithSummary("Get User By Email")
             .WithDescription("Get User Email");
         }

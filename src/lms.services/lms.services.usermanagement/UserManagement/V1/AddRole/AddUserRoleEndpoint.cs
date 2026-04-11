@@ -40,9 +40,12 @@ namespace lms.services.usermanagement.UserManagement.V1.AddRole
                     return Results.Created($"/User/{response.RoleAdded}", apiResponse);
 
                 })
+                .RequireAuthorization(policy => policy.RequireRole("Admin"))
                 .MapToApiVersion(1, 0)
                 .Produces<AddUserRoleResponse>(StatusCodes.Status201Created)
                 .ProducesProblem(StatusCodes.Status400BadRequest)
+                .ProducesProblem(StatusCodes.Status401Unauthorized)
+                .ProducesProblem(StatusCodes.Status403Forbidden)
                 .WithSummary("Add User Roles")
                 .WithDescription("Add User Roles");
         }
