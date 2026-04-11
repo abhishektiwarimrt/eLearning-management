@@ -1,0 +1,130 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:18.1-alpine
+    container_name: lms_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lms_network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: lms_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - lms_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: lms_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lms_network
+
+  coursemanagement:
+    build:
+      context: .
+      dockerfile: src/lms.services/lms.services.coursemanagement/Dockerfile
+    container_name: lms_coursemanagement
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__CourseDatabase=Server=postgres;Port=5432;Database=coursedb;User Id=postgres;Password=postgres;
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__Redis=redis:6379
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - lms_network
+
+  usermanagement:
+    build:
+      context: .
+      dockerfile: src/lms.services/lms.services.usermanagement/Dockerfile
+    container_name: lms_usermanagement
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__UserDatabase=Server=postgres;Port=5432;Database=userdb;User Id=postgres;Password=postgres;
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__Redis=redis:6379
+    ports:
+      - "8081:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - lms_network
+
+  discountgrpc:
+    build:
+      context: .
+      dockerfile: src/lms.services/lms.services.discount.gRPC/Discount.gRPC/Dockerfile
+    container_name: lms_discountgrpc
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+    ports:
+      - "8083:8080"
+    networks:
+      - lms_network
+
+  web:
+    build:
+      context: .
+      dockerfile: src/lms.web/Dockerfile
+    container_name: lms_web
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      # Aspire-style service URL keys read by UserManagementService and CourseManagementService
+      - services__usermanagement__http__0=http://usermanagement:8080
+      - services__coursemanagement__http__0=http://coursemanagement:8080
+      - services__discountgrpc__http__0=http://discountgrpc:8080
+    ports:
+      - "5173:8080"
+    depends_on:
+      - coursemanagement
+      - usermanagement
+      - discountgrpc
+    networks:
+      - lms_network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  lms_network:
+    driver: bridge

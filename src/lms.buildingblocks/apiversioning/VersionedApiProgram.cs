@@ -1,5 +1,6 @@
 ﻿using Carter;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Hosting;
 
 namespace lms.buildingblocks.apiversioning
 {
@@ -12,7 +13,10 @@ namespace lms.buildingblocks.apiversioning
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add default services           
+            // Wire up Aspire service defaults: OpenTelemetry, health checks, service discovery
+            builder.AddServiceDefaults();
+
+            // Add default services
             builder.Services.AddCarter();
             builder.Services.AddVersionedApi();
 
@@ -20,6 +24,9 @@ namespace lms.buildingblocks.apiversioning
             configureServices?.Invoke(builder);
 
             var app = builder.Build();
+
+            // Expose /health and /alive endpoints
+            app.MapDefaultEndpoints();
 
             // Add default middleware
             app.MapCarter();

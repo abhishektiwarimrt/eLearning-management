@@ -1,0 +1,119 @@
+{
+  "$schema": "https://aka.ms/dotnet/aspire/aspire-8.0.json",
+  "resources": {
+    "postgres": {
+      "type": "container.v0",
+      "image": {
+        "image": "postgres:16-alpine",
+        "tag": "latest"
+      },
+      "env": {
+        "POSTGRES_USER": "postgres",
+        "POSTGRES_PASSWORD": "{postgres.password}",
+        "POSTGRES_INITDB_ARGS": "--locale en_US.UTF-8"
+      },
+      "ports": [
+        {
+          "containerPort": 5432,
+          "hostPort": 5432,
+          "protocol": "tcp"
+        }
+      ],
+      "volumes": [
+        {
+          "name": "postgres_data",
+          "mountPath": "/var/lib/postgresql/data"
+        }
+      ],
+      "healthChecks": [
+        {
+          "type": "command",
+          "command": "pg_isready -U postgres",
+          "interval": 10,
+          "timeout": 5,
+          "retries": 5
+        }
+      ]
+    },
+    "pgadmin": {
+      "type": "container.v0",
+      "image": {
+        "image": "dpage/pgadmin4",
+        "tag": "latest"
+      },
+      "env": {
+        "PGADMIN_DEFAULT_EMAIL": "admin@example.com",
+        "PGADMIN_DEFAULT_PASSWORD": "admin"
+      },
+      "ports": [
+        {
+          "containerPort": 80,
+          "hostPort": 5050,
+          "protocol": "tcp"
+        }
+      ]
+    },
+    "redis": {
+      "type": "container.v0",
+      "image": {
+        "image": "redis",
+        "tag": "7-alpine"
+      },
+      "ports": [
+        {
+          "containerPort": 6379,
+          "hostPort": 6379,
+          "protocol": "tcp"
+        }
+      ],
+      "volumes": [
+        {
+          "name": "redis_data",
+          "mountPath": "/data"
+        }
+      ]
+    },
+    "coursemanagement": {
+      "type": "project.v0",
+      "path": "../src/lms.services/lms.services.coursemanagement/lms.services.coursemanagement.csproj",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Production",
+        "ConnectionStrings__CourseDatabase": "{postgres-connection-string}"
+      }
+    },
+    "usermanagement": {
+      "type": "project.v0",
+      "path": "../src/lms.services/lms.services.usermanagement/lms.services.usermanagement.csproj",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Production",
+        "ConnectionStrings__UserDatabase": "{postgres-connection-string}"
+      }
+    },
+    "instructor": {
+      "type": "project.v0",
+      "path": "../src/lms.services.instructor/lms.services.instructor.csproj",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Production",
+        "ConnectionStrings__InstructorDatabase": "{postgres-connection-string}"
+      }
+    },
+    "discountgrpc": {
+      "type": "project.v0",
+      "path": "../src/lms.services/lms.services.discount.gRPC/Discount.gRPC/Discount.gRPC.csproj",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Production"
+      }
+    },
+    "web": {
+      "type": "project.v0",
+      "path": "../src/lms.web/lms.web.csproj",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Production",
+        "SERVICES__COURSEMANAGEMENT__HTTP": "http://coursemanagement",
+        "SERVICES__USERMANAGEMENT__HTTP": "http://usermanagement",
+        "SERVICES__INSTRUCTOR__HTTP": "http://instructor",
+        "SERVICES__DISCOUNT__GRPC": "http://discountgrpc"
+      }
+    }
+  }
+}

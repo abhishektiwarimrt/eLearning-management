@@ -29,7 +29,7 @@ namespace lms.web.Controllers
             try
             {
                 emailId = "aa@aa.com";
-                UserRolesViewModel model  = null;
+                UserRolesViewModel? model = null;
                 var user = await _userService.GetUserByEmailAsync(emailId);
                 var currentUserRoles = await _userService.GetUserRoles(emailId);
                 var knownRoles = new[] { "Admin", "Instructor", "Student" }; // Constrained roles [cite:6][cite:7]
@@ -38,8 +38,8 @@ namespace lms.web.Controllers
                     model = new UserRolesViewModel
                     {
                         UserId = emailId,
-                        FirstName = user.FirstName,
-                        LastName = user.LastName,
+                        FirstName = user.FirstName ?? string.Empty,
+                        LastName = user.LastName ?? string.Empty,
                         DateOfBirth = DateTime.Now,
                         CurrentRoles = currentUserRoles.UserRoles ?? new List<string>(),
                         AvailableRoles = knownRoles.Except(currentUserRoles.UserRoles ?? new List<string>()).ToList()
@@ -48,7 +48,7 @@ namespace lms.web.Controllers
 
                 return View(model);
             }
-            catch(Exception ex)
+            catch(Exception)
             {
                 throw;
             }

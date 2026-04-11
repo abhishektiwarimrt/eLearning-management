@@ -1,0 +1,542 @@
+---
+# Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lms
+
+---
+# PostgreSQL Secret
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-credentials
+  namespace: lms
+type: Opaque
+stringData:
+  username: postgres
+  password: postgres  # Change in production!
+
+---
+# PostgreSQL ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: lms
+data:
+  POSTGRES_INITDB_ARGS: "--locale en_US.UTF-8"
+
+---
+# PostgreSQL PersistentVolumeClaim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: lms
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard
+
+---
+# PostgreSQL StatefulSet
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: lms
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:16-alpine
+        ports:
+        - containerPort: 5432
+          name: postgres
+        envFrom:
+        - configMapRef:
+            name: postgres-config
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-credentials
+              key: username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-credentials
+              key: password
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - pg_isready -U postgres
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - pg_isready -U postgres
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumeClaims:
+      - name: postgres-storage
+        spec:
+          accessModes: [ "ReadWriteOnce" ]
+          resources:
+            requests:
+              storage: 10Gi
+
+---
+# PostgreSQL Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: lms
+spec:
+  selector:
+    app: postgres
+  ports:
+  - port: 5432
+    targetPort: 5432
+  clusterIP: None
+
+---
+# Redis PersistentVolumeClaim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pvc
+  namespace: lms
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: standard
+
+---
+# Redis Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: lms
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+        volumeMounts:
+        - name: redis-storage
+          mountPath: /data
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 10
+          periodSeconds: 10
+      volumes:
+      - name: redis-storage
+        persistentVolumeClaim:
+          claimName: redis-pvc
+
+---
+# Redis Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: lms
+spec:
+  selector:
+    app: redis
+  ports:
+  - port: 6379
+    targetPort: 6379
+
+---
+# Course Management Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: coursemanagement
+  namespace: lms
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: coursemanagement
+  template:
+    metadata:
+      labels:
+        app: coursemanagement
+    spec:
+      containers:
+      - name: coursemanagement
+        image: your-registry/lms-coursemanagement:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: "Production"
+        - name: ConnectionStrings__CourseDatabase
+          value: "Server=postgres;Port=5432;Database=coursedb;User Id=postgres;Password=postgres;"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+
+---
+# Course Management Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: coursemanagement
+  namespace: lms
+spec:
+  selector:
+    app: coursemanagement
+  ports:
+  - port: 80
+    targetPort: 80
+  type: ClusterIP
+
+---
+# User Management Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: usermanagement
+  namespace: lms
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: usermanagement
+  template:
+    metadata:
+      labels:
+        app: usermanagement
+    spec:
+      containers:
+      - name: usermanagement
+        image: your-registry/lms-usermanagement:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: "Production"
+        - name: ConnectionStrings__UserDatabase
+          value: "Server=postgres;Port=5432;Database=userdb;User Id=postgres;Password=postgres;"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+
+---
+# User Management Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: usermanagement
+  namespace: lms
+spec:
+  selector:
+    app: usermanagement
+  ports:
+  - port: 80
+    targetPort: 80
+  type: ClusterIP
+
+---
+# Instructor Service Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: instructor
+  namespace: lms
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: instructor
+  template:
+    metadata:
+      labels:
+        app: instructor
+    spec:
+      containers:
+      - name: instructor
+        image: your-registry/lms-instructor:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: "Production"
+        - name: ConnectionStrings__InstructorDatabase
+          value: "Server=postgres;Port=5432;Database=instructordb;User Id=postgres;Password=postgres;"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+
+---
+# Instructor Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: instructor
+  namespace: lms
+spec:
+  selector:
+    app: instructor
+  ports:
+  - port: 80
+    targetPort: 80
+  type: ClusterIP
+
+---
+# Discount gRPC Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: discountgrpc
+  namespace: lms
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: discountgrpc
+  template:
+    metadata:
+      labels:
+        app: discountgrpc
+    spec:
+      containers:
+      - name: discountgrpc
+        image: your-registry/lms-discountgrpc:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: "Production"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "250m"
+
+---
+# Discount gRPC Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: discountgrpc
+  namespace: lms
+spec:
+  selector:
+    app: discountgrpc
+  ports:
+  - port: 80
+    targetPort: 80
+  type: ClusterIP
+
+---
+# Web Application Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: lms
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+      - name: web
+        image: your-registry/lms-web:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: "Production"
+        - name: SERVICES__COURSEMANAGEMENT__HTTP
+          value: "http://coursemanagement:80"
+        - name: SERVICES__USERMANAGEMENT__HTTP
+          value: "http://usermanagement:80"
+        - name: SERVICES__INSTRUCTOR__HTTP
+          value: "http://instructor:80"
+        - name: SERVICES__DISCOUNT__GRPC
+          value: "http://discountgrpc:80"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+
+---
+# Web Application Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  namespace: lms
+spec:
+  selector:
+    app: web
+  ports:
+  - port: 80
+    targetPort: 80
+  type: LoadBalancer
+
+---
+# Ingress (optional, for external access)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: lms-ingress
+  namespace: lms
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  rules:
+  - host: "lms.example.com"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web
+            port:
+              number: 80
+  - host: "api.lms.example.com"
+    http:
+      paths:
+      - path: /courses
+        pathType: Prefix
+        backend:
+          service:
+            name: coursemanagement
+            port:
+              number: 80
+      - path: /users
+        pathType: Prefix
+        backend:
+          service:
+            name: usermanagement
+            port:
+              number: 80
+      - path: /instructors
+        pathType: Prefix
+        backend:
+          service:
+            name: instructor
+            port:
+              number: 80

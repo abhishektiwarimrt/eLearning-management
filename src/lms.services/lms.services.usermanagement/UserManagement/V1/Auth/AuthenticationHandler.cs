@@ -8,7 +8,9 @@ namespace lms.services.usermanagement.UserManagement.V1.Auth
     string? Email = null,
     string[]? Roles = null);
     public record UserAuthCommand(LoginUserDto UserLogin) : IRequest<UserAuthResponse>;
-    public class AuthenticationHandler (IUserService userService, IRoleService roleService, IUnitOfWork<UserDbContext> unitOfWork, ILogger<AuthenticationHandler> _logger) 
+#pragma warning disable CS9113
+    public class AuthenticationHandler (IUserService userService, IRoleService roleService, IUnitOfWork<UserDbContext> _unitOfWork, ILogger<AuthenticationHandler> _logger)
+#pragma warning restore CS9113
         : IRequestHandler<UserAuthCommand, UserAuthResponse>
     {
 

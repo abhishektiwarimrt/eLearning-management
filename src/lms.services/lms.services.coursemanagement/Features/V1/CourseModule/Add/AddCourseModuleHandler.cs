@@ -17,9 +17,6 @@
         {
             try
             {
-                string createMesage;
-
-
                 var addedCourseModulesDto = await courseModuleService.CreateModuleAsync(command.CourseId, command.CourseSectionId, command.CourseModules);
                 //if (addedCourseModulesDto != null && addedCourseModulesDto.)
                 //{
@@ -53,8 +50,6 @@
         private static readonly string[] AllowedExtensions = { ".docx", ".pdf", ".mp4" };
         public CourseModuleDtoValidator()
         {
-            long maxFileSize = 4L * 1024L * 1024L * 1024L;
-
             RuleFor(x => x.Title)
                 .NotEmpty().WithMessage("Title is required.")
                 .Matches(@"^[A-Za-z0-9()'""\,-_\ ]+$")

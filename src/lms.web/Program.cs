@@ -12,6 +12,9 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Wire up Aspire service defaults: OpenTelemetry, health checks, service discovery
+builder.AddServiceDefaults();
+
 // Add services to the container.
 // JWT Authentication (usermanagement microservice)
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -87,5 +90,7 @@ app.UseSession();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapDefaultEndpoints();
 
 app.Run();

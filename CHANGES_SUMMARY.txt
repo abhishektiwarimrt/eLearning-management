@@ -1,0 +1,126 @@
+==============================================================================
+ELEARNING MANAGEMENT SYSTEM - CHANGES SUMMARY
+==============================================================================
+
+Last updated: April 12, 2026
+
+==============================================================================
+CURRENT STATE
+==============================================================================
+
+Runtime:        .NET 10
+Aspire:         13.2.2 (Aspire.AppHost.Sdk)
+Docker images:  dotnet/aspnet:10.0, dotnet/sdk:10.0
+PostgreSQL:     18.1-alpine
+Redis:          7-alpine
+
+==============================================================================
+ASPIRE CONFIGURATION
+==============================================================================
+
+AppHost/AppHost.csproj
+  - Uses <Sdk Name="Aspire.AppHost.Sdk" Version="13.2.2" />
+  - All ProjectReferences have IsAspireProjectResource="true"
+  - Packages: Aspire.Hosting, Aspire.Hosting.AppHost, Aspire.Hosting.PostgreSQL,
+              Aspire.Hosting.Redis
+
+AppHost/Program.cs
+  - Registers: redis, coursemanagement, usermanagement, web
+  - Uses launchProfileName: "https" on AddProject<T>()
+  - Uses WithReference() for service discovery injection
+
+AppHost/Properties/launchSettings.json
+  - https profile: dashboard at https://localhost:15889
+  - DOTNET_DASHBOARD_OTLP_ENDPOINT_URL: https://localhost:16175
+  - DOTNET_RESOURCE_SERVICE_ENDPOINT_URL: https://localhost:17013
+
+aspire/ServiceDefaults/ServiceDefaults.csproj
+  - IsAspireSharedProject=true
+  - OpenTelemetry packages (Hosting, OTLP, AspNetCore, Http, Runtime) v1.14.0
+  - Microsoft.Extensions.Http.Resilience 9.4.0
+  - Microsoft.Extensions.ServiceDiscovery 9.4.0
+
+aspire/ServiceDefaults/Extensions.cs
+  - AddServiceDefaults(): OpenTelemetry + health checks + service discovery
+  - MapDefaultEndpoints(): /health and /alive endpoints
+
+==============================================================================
+DOCKER CONFIGURATION
+==============================================================================
+
+All Dockerfiles rebuilt to:
+  - Use dotnet/aspnet:10.0 and dotnet/sdk:10.0
+  - Be built from repo root context (so aspire/ServiceDefaults/ is reachable)
+  - Use ASPNETCORE_URLS=http://+:8080 (port 8080 consistently)
+
+Dockerfiles:
+  src/lms.services/lms.services.coursemanagement/Dockerfile
+  src/lms.services/lms.services.usermanagement/Dockerfile
+  src/lms.services/lms.services.discount.gRPC/Discount.gRPC/Dockerfile
+  src/lms.web/Dockerfile
+
+docker-compose.yml
+  - Builds from repo root context (. not src/)
+  - Container port 8080 for all .NET services
+  - Host ports: coursemanagement=8080, usermanagement=8081, discountgrpc=8083, web=5173
+  - web service uses services__*__http__0 env var format (matches code)
+  - instructor service removed (Dockerfile/path does not exist yet)
+  - PostgreSQL image updated to 18.1-alpine
+
+==============================================================================
+BUG FIXES APPLIED
+==============================================================================
+
+1. Proto case-sensitivity (Linux Docker build failure)
+   File: src/lms.services/lms.services.discount.gRPC/Discount.gRPC/Discount.gRPC.csproj
+   Change: Protos\discount.proto → Protos\Discount.proto
+   Reason: Linux filesystem is case-sensitive; file on disk is Discount.proto
+
+2. Swashbuckle + Microsoft.OpenApi version conflict (Swagger 500 error)
+   Removed explicit Microsoft.OpenApi 3.5.1 pin from lms.buildingblocks.csproj
+   Swashbuckle 10.1.7 requires Microsoft.OpenApi 2.4.1 (ABI incompatible with 3.5.1)
+
+3. Aspire workload deprecation (NETSDK1228)
+   Replaced IsAspireHost=true with <Sdk Name="Aspire.AppHost.Sdk" Version="13.2.2" />
+
+4. CS0234 - Projects.* types not generated
+   Added IsAspireProjectResource="true" on all ProjectReferences in AppHost
+
+5. Runtime: Endpoint with name 'http' already exists
+   Removed all WithHttpEndpoint() calls from AppHost Program.cs
+
+6. Service discovery URL format
+   Web app reads services__usermanagement__https__0 / services__usermanagement__http__0
+   (Aspire-injected format), not MicroServices:UserManagementUrl
+
+==============================================================================
+SERVICES IN DOCKER COMPOSE
+==============================================================================
+
+postgres         - PostgreSQL 18.1, port 5432
+pgadmin          - pgAdmin 4, port 5050
+redis            - Redis 7, port 6379
+coursemanagement - .NET 10 REST API, host port 8080
+usermanagement   - .NET 10 REST API, host port 8081
+discountgrpc     - .NET 10 gRPC, host port 8083
+web              - .NET 10 MVC, host port 5173
+
+==============================================================================
+QUICK REFERENCE
+==============================================================================
+
+Start with Aspire:
+  cd AppHost && dotnet run --launch-profile https
+  Dashboard: https://localhost:15889
+
+Start with Docker:
+  docker compose up --build
+
+Stop Docker:
+  docker compose down
+  docker compose down -v   (removes database volumes)
+
+Build a single service:
+  docker compose build --no-cache coursemanagement
+
+==============================================================================
