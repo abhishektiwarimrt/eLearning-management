@@ -15,7 +15,7 @@
         <!-- Current Roles -->
         <section class="bg-white shadow-sm rounded-lg p-6 mb-8">
             <h2 class="text-xl font-semibold text-gray-900 mb-4">Current Roles</h2>
-            @if (Model.CurrentRoles.Any())
+            @if (Model.CurrentRoles?.Any() == true)
             {
                 <div class="flex flex-wrap gap-2">
                     @foreach (var role in Model.CurrentRoles)
@@ -40,7 +40,7 @@
         <!-- Available Roles -->
         <section class="bg-white shadow-sm rounded-lg p-6">
             <h2 class="text-xl font-semibold text-gray-900 mb-4">Assign New Role</h2>
-            @if (Model.AvailableRoles.Any())
+            @if (Model.AvailableRoles?.Any() == true)
             {
                 <div class="space-y-3">
                     @foreach (var role in Model.AvailableRoles)

@@ -47,7 +47,9 @@ namespace lms.services.usermanagement.InstructorOnboarding
     /// POST /api/v1/user/{UserEmail}/onboarding  — save/update a step
     /// GET  /api/v1/user/{UserEmail}/onboarding  — check status and resume data
     /// </summary>
-    public class OnboardingEndpoint(ILogger<OnboardingEndpoint> logger) : VersionedCarterModule
+#pragma warning disable CS9113
+    public class OnboardingEndpoint(ILogger<OnboardingEndpoint> _logger) : VersionedCarterModule
+#pragma warning restore CS9113
     {
         protected override ApiVersion ApiVersion => new(1, 0);
         protected override string ApiName => "User";
@@ -61,7 +63,7 @@ namespace lms.services.usermanagement.InstructorOnboarding
                        ISender sender,
                        HttpContext context) =>
                 {
-                    string email = context.Request.RouteValues["UserEmail"]?.ToString();
+                    string? email = context.Request.RouteValues["UserEmail"]?.ToString();
                     if (string.IsNullOrWhiteSpace(email))
                         return Results.BadRequest("Invalid UserEmail.");
 
@@ -84,7 +86,7 @@ namespace lms.services.usermanagement.InstructorOnboarding
             group.MapGet("/{UserEmail}/onboarding",
                 async (string UserEmail, ISender sender, HttpContext context) =>
                 {
-                    string email = context.Request.RouteValues["UserEmail"]?.ToString();
+                    string? email = context.Request.RouteValues["UserEmail"]?.ToString();
                     if (string.IsNullOrWhiteSpace(email))
                         return Results.BadRequest("Invalid UserEmail.");
 

@@ -29,7 +29,7 @@ namespace lms.services.usermanagement.UserManagement.V1.UpdateUserProfile
 
                     UpdateUserProfileCommand command = request.Adapt<UpdateUserProfileCommand>()
                     with
-                    { Email = userEmail.ToString(), Data = request };
+                    { Email = userEmail.ToString()!, Data = request };
 
                     logger.LogInformation("UpdateProfile request for {Email}", userEmail);
 

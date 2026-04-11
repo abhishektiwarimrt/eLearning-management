@@ -4,7 +4,9 @@ using lms.services.usermanagement.UserManagement.V1.UpdateUserProfile;
 
 namespace lms.services.usermanagement.Services
 {
-    public class UserService(IUserRepository _userRepository, IRoleRepository roleRepository, ILogger<UserService> logger) : IUserService
+#pragma warning disable CS9113
+    public class UserService(IUserRepository _userRepository, IRoleRepository _roleRepository, ILogger<UserService> logger) : IUserService
+#pragma warning restore CS9113
     {
         public async Task<bool?> CreateUserAsync(RegisterUserCommand request)
         {

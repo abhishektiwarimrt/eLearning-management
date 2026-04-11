@@ -16,10 +16,27 @@ namespace lms.web.Services
         public UserManagementService(IConfiguration config, ILogger<UserManagementService> logger)
         {
             _logger = logger;
-            _httpClient = new HttpClient
+
+            // Aspire injects service URLs as services__usermanagement__https__0 (preferred) or http__0
+            // Falls back to appsettings MicroServices:UserManagementUrl for non-Aspire runs
+            string baseUrl =
+                config["services__usermanagement__https__0"] ??
+                config["services__usermanagement__http__0"] ??
+                config["MicroServices:UserManagementUrl"] ??
+                "https://localhost:5050/";
+
+            if (!baseUrl.EndsWith('/'))
+                baseUrl += '/';
+
+            _httpClient = new HttpClient(new HttpClientHandler
             {
-                BaseAddress = new Uri(config["MicroServices:UserManagementUrl"] ?? "https://localhost:7128/")
+                // Trust the ASP.NET Core dev certificate in local Aspire runs
+                ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+            })
+            {
+                BaseAddress = new Uri(baseUrl)
             };
+
             _jsonOptions = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true,

@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Http;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using System.Reflection;
 
 namespace lms.buildingblocks.OpenAPI
 {
@@ -8,13 +9,13 @@ namespace lms.buildingblocks.OpenAPI
     {
         public void Apply(OpenApiOperation operation, OperationFilterContext context)
         {
-            var fileParams = context.MethodInfo.GetParameters()
+            List<ParameterInfo> fileParams = context.MethodInfo.GetParameters()
             .Where(p => p.ParameterType == typeof(IFormFile) || p.ParameterType == typeof(IFormFileCollection))
             .ToList();
 
             if (fileParams.Any())
             {
-                operation.Parameters.Clear();
+                operation.Parameters?.Clear();
                 operation.RequestBody = new OpenApiRequestBody
                 {
                     Content = new Dictionary<string, OpenApiMediaType>
@@ -23,30 +24,14 @@ namespace lms.buildingblocks.OpenAPI
                         {
                             Schema = new OpenApiSchema
                             {
-                                Type = "object",
-                                Properties = new Dictionary<string, OpenApiSchema>
+                                Type = JsonSchemaType.Object,
+                                Properties = new Dictionary<string, IOpenApiSchema>
                                 {
-                                    ["file"] = new OpenApiSchema
-                                    {
-                                        Type = "string",
-                                        Format = "binary"
-                                    },
-                                    ["Title"] = new OpenApiSchema
-                                    {
-                                        Type = "string"
-                                    },
-                                    ["ContentType"] = new OpenApiSchema
-                                    {
-                                        Type = "string"
-                                    },
-                                    ["Content"] = new OpenApiSchema
-                                    {
-                                        Type = "string"
-                                    },
-                                    ["Order"] = new OpenApiSchema
-                                    {
-                                        Type = "integer"
-                                    }
+                                    ["file"] = new OpenApiSchema { Type = JsonSchemaType.String, Format = "binary" },
+                                    ["Title"] = new OpenApiSchema { Type = JsonSchemaType.String },
+                                    ["ContentType"] = new OpenApiSchema { Type = JsonSchemaType.String },
+                                    ["Content"] = new OpenApiSchema { Type = JsonSchemaType.String },
+                                    ["Order"] = new OpenApiSchema { Type = JsonSchemaType.Integer }
                                 },
                                 Required = new HashSet<string> { "file" }
                             }
