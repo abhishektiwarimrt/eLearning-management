@@ -3,8 +3,8 @@ name: Docker Build and Push
 on:
   push:
     branches:
-      - main
-      - develop
+      - release
+      - release/**
     paths:
       - 'src/**'
       - 'AppHost/**'
@@ -13,8 +13,8 @@ on:
       - '.github/workflows/docker-build.yml'
   pull_request:
     branches:
-      - main
-      - develop
+      - release
+      - release/**
 
 env:
   REGISTRY: ghcr.io
@@ -31,13 +31,10 @@ jobs:
       matrix:
         service:
           - name: coursemanagement
-            dockerfile: src/lms.services/lms.services.coursemanagement/Dockerfile.new
+            dockerfile: src/lms.services/lms.services.coursemanagement/Dockerfile
             context: .
           - name: usermanagement
             dockerfile: src/lms.services/lms.services.usermanagement/Dockerfile
-            context: .
-          - name: instructor
-            dockerfile: src/lms.services.instructor/Dockerfile
             context: .
           - name: discountgrpc
             dockerfile: src/lms.services/lms.services.discount.gRPC/Discount.gRPC/Dockerfile
