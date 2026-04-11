@@ -2,12 +2,11 @@ version: '3.8'
 
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:18.1-alpine
     container_name: lms_postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_INITDB_ARGS: "--locale en_US.UTF-8"
     ports:
       - "5432:5432"
     volumes:
@@ -51,14 +50,15 @@ services:
   coursemanagement:
     build:
       context: .
-      dockerfile: src/lms.services/lms.services.coursemanagement/Dockerfile.new
+      dockerfile: src/lms.services/lms.services.coursemanagement/Dockerfile
     container_name: lms_coursemanagement
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__CourseDatabase=Server=postgres;Port=5432;Database=coursedb;User Id=postgres;Password=postgres;
-      - ASPNETCORE_URLS=http://+:80
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__Redis=redis:6379
     ports:
-      - "8080:80"
+      - "8080:8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -75,28 +75,10 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__UserDatabase=Server=postgres;Port=5432;Database=userdb;User Id=postgres;Password=postgres;
-      - ASPNETCORE_URLS=http://+:80
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__Redis=redis:6379
     ports:
-      - "8081:80"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - lms_network
-
-  instructor:
-    build:
-      context: .
-      dockerfile: src/lms.services.instructor/Dockerfile
-    container_name: lms_instructor
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__InstructorDatabase=Server=postgres;Port=5432;Database=instructordb;User Id=postgres;Password=postgres;
-      - ASPNETCORE_URLS=http://+:80
-    ports:
-      - "8082:80"
+      - "8081:8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -112,12 +94,9 @@ services:
     container_name: lms_discountgrpc
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:80
+      - ASPNETCORE_URLS=http://+:8080
     ports:
-      - "8083:80"
-    depends_on:
-      postgres:
-        condition: service_healthy
+      - "8083:8080"
     networks:
       - lms_network
 
@@ -128,17 +107,16 @@ services:
     container_name: lms_web
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:80
-      - SERVICES__COURSEMANAGEMENT__HTTP=http://coursemanagement:80
-      - SERVICES__USERMANAGEMENT__HTTP=http://usermanagement:80
-      - SERVICES__INSTRUCTOR__HTTP=http://instructor:80
-      - SERVICES__DISCOUNT__GRPC=http://discountgrpc:80
+      - ASPNETCORE_URLS=http://+:8080
+      # Aspire-style service URL keys read by UserManagementService and CourseManagementService
+      - services__usermanagement__http__0=http://usermanagement:8080
+      - services__coursemanagement__http__0=http://coursemanagement:8080
+      - services__discountgrpc__http__0=http://discountgrpc:8080
     ports:
-      - "5173:80"
+      - "5173:8080"
     depends_on:
       - coursemanagement
       - usermanagement
-      - instructor
       - discountgrpc
     networks:
       - lms_network
