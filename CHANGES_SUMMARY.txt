@@ -8,10 +8,11 @@ Last updated: April 12, 2026
 CURRENT STATE
 ==============================================================================
 
-Runtime:        .NET 10
+Runtime:        .NET 10 (SDK 10.0.201, locked via global.json)
 Aspire:         13.2.2 (Aspire.AppHost.Sdk)
 Docker images:  dotnet/aspnet:10.0, dotnet/sdk:10.0
-PostgreSQL:     18.1-alpine
+PostgreSQL:     NeonDB (cloud, serverless) for production/staging
+                18.1-alpine (Docker Compose) for local development
 Redis:          7-alpine
 
 ==============================================================================
@@ -65,7 +66,50 @@ docker-compose.yml
   - Host ports: coursemanagement=8080, usermanagement=8081, discountgrpc=8083, web=5173
   - web service uses services__*__http__0 env var format (matches code)
   - instructor service removed (Dockerfile/path does not exist yet)
-  - PostgreSQL image updated to 18.1-alpine
+  - PostgreSQL image updated to 18.1-alpine (local dev only)
+
+==============================================================================
+DATABASE - NEONDB (PRODUCTION)
+==============================================================================
+
+NeonDB is the managed serverless PostgreSQL provider used for production and
+staging deployments (Render).
+
+Two separate databases are required:
+  coursedb  - used by lms.services.coursemanagement
+  userdb    - used by lms.services.usermanagement
+
+NeonDB connection string format (Npgsql key-value — use this everywhere):
+  Host=ep-xxx.us-east-1.aws.neon.tech;Database=<dbname>;Username=neondb_owner;
+  Password=<password>;SSL Mode=Require;Trust Server Certificate=true;
+
+DO NOT use the URI format (postgresql://...) with Npgsql — use key-value only.
+
+==============================================================================
+DATABASE MIGRATIONS (NEONDB)
+==============================================================================
+
+Prerequisites:
+  dotnet tool install --global dotnet-ef
+
+Run from repo root:
+
+  CourseDB:
+  dotnet ef database update \
+    --project src/lms.shared.data \
+    --startup-project src/lms.services/lms.services.coursemanagement \
+    --context CourseDbContext \
+    --connection "Host=ep-xxx.us-east-1.aws.neon.tech;Database=coursedb;Username=neondb_owner;Password=xxx;SSL Mode=Require;Trust Server Certificate=true;"
+
+  UserDB:
+  dotnet ef database update \
+    --project src/lms.shared.data \
+    --startup-project src/lms.services/lms.services.usermanagement \
+    --context UserDbContext \
+    --connection "Host=ep-xxx.us-east-1.aws.neon.tech;Database=userdb;Username=neondb_owner;Password=xxx;SSL Mode=Require;Trust Server Certificate=true;"
+
+Verify migrations applied (in NeonDB SQL Editor):
+  SELECT * FROM "__EFMigrationsHistory";
 
 ==============================================================================
 BUG FIXES APPLIED
@@ -93,8 +137,23 @@ BUG FIXES APPLIED
    Web app reads services__usermanagement__https__0 / services__usermanagement__http__0
    (Aspire-injected format), not MicroServices:UserManagementUrl
 
+7. Npgsql version conflict on Render (get_LockReleaseBehavior error)
+   Cause: Render build cache was loading Npgsql 8.0.4 despite lms.shared.data
+          referencing 10.0.1. lms.services.aws was still on net8.0 causing
+          the old version to be resolved transitively.
+   Fix:   Bumped lms.services.aws and lms.shared.common to net10.0.
+          Added explicit Npgsql.EntityFrameworkCore.PostgreSQL 10.0.1 reference
+          to lms.services.coursemanagement.csproj.
+          Added global.json to lock SDK to 10.0.201.
+          Clear build cache on Render before redeploying.
+
+8. Unable to retrieve project metadata (dotnet ef error)
+   Cause: lms.shared.data and lms.shared.common targeted net8.0 while startup
+          projects target net10.0 — framework mismatch.
+   Fix:   Updated both to net10.0 with matching package versions.
+
 ==============================================================================
-SERVICES IN DOCKER COMPOSE
+SERVICES IN DOCKER COMPOSE (LOCAL DEV)
 ==============================================================================
 
 postgres         - PostgreSQL 18.1, port 5432
@@ -109,11 +168,11 @@ web              - .NET 10 MVC, host port 5173
 QUICK REFERENCE
 ==============================================================================
 
-Start with Aspire:
+Start with Aspire (local dev):
   cd AppHost && dotnet run --launch-profile https
   Dashboard: https://localhost:15889
 
-Start with Docker:
+Start with Docker (local dev):
   docker compose up --build
 
 Stop Docker:
@@ -122,5 +181,8 @@ Stop Docker:
 
 Build a single service:
   docker compose build --no-cache coursemanagement
+
+Run migrations against NeonDB:
+  See DATABASE MIGRATIONS section above
 
 ==============================================================================

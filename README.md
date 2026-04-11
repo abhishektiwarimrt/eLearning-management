@@ -24,13 +24,33 @@ CourseManagement  UserManagement  Discount gRPC
 
 | Service | Dev Port | Protocol | Database |
 |---|---|---|---|
-| Course Management | 8080 | REST | coursedb (PostgreSQL) |
-| User Management | 8081 | REST | userdb (PostgreSQL) |
-| Discount gRPC | 8083 | gRPC | SQLite |
+| Course Management | 8080 | REST | coursedb — NeonDB (prod) / PostgreSQL (local) |
+| User Management | 8081 | REST | userdb — NeonDB (prod) / PostgreSQL (local) |
+| Discount gRPC | 8083 | gRPC | SQLite (embedded) |
 | Web App | 5173 | HTTP | — |
-| PostgreSQL | 5432 | — | — |
+| PostgreSQL | 5432 | — | Local dev only |
 | Redis | 6379 | — | — |
-| pgAdmin | 5050 | HTTP | — |
+| pgAdmin | 5050 | HTTP | Local dev only |
+
+## Database Setup (NeonDB — production)
+
+Create `coursedb` and `userdb` in [NeonDB](https://console.neon.tech), then run migrations from the repo root:
+
+```bash
+dotnet ef database update \
+  --project src/lms.shared.data \
+  --startup-project src/lms.services/lms.services.coursemanagement \
+  --context CourseDbContext \
+  --connection "Host=ep-xxx.us-east-1.aws.neon.tech;Database=coursedb;Username=neondb_owner;Password=xxx;SSL Mode=Require;Trust Server Certificate=true;"
+
+dotnet ef database update \
+  --project src/lms.shared.data \
+  --startup-project src/lms.services/lms.services.usermanagement \
+  --context UserDbContext \
+  --connection "Host=ep-xxx.us-east-1.aws.neon.tech;Database=userdb;Username=neondb_owner;Password=xxx;SSL Mode=Require;Trust Server Certificate=true;"
+```
+
+See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for the full NeonDB setup and Render environment variable configuration.
 
 ## Running the System
 
