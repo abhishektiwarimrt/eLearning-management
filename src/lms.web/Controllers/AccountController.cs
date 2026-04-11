@@ -113,6 +113,10 @@ namespace lms.web.Controllers
                         new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)),
                         new AuthenticationProperties { IsPersistent = model.RememberMe });
 
+                    // Store the JWT so service calls can forward it as Bearer token
+                    if (!string.IsNullOrEmpty(response.Token))
+                        HttpContext.Session.SetString("jwt_token", response.Token);
+
                     return RedirectToAction("Index", "Home");
                 }
 
@@ -129,6 +133,7 @@ namespace lms.web.Controllers
 
         public async Task<IActionResult> Logout()
         {
+            HttpContext.Session.Remove("jwt_token");
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Index", "Home");
         }

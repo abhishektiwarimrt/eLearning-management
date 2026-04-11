@@ -99,9 +99,12 @@ namespace lms.services.coursemanagement.Features.V1.CourseModule.Add
 
                 })
                 .Accepts<CreateCoureModeulesRequst>("multipart/form-data")
+                .RequireAuthorization(policy => policy.RequireRole("Instructor", "Admin"))
                 .MapToApiVersion(1, 0)
                 .Produces<ApiResponse<CoureModeulesCommandResponse>>(StatusCodes.Status201Created)
                 .ProducesProblem(StatusCodes.Status400BadRequest)
+                .ProducesProblem(StatusCodes.Status401Unauthorized)
+                .ProducesProblem(StatusCodes.Status403Forbidden)
                 .WithSummary("Create Course Sections Modules")
                 .WithDescription("Create Course Sections Modules");
         }
