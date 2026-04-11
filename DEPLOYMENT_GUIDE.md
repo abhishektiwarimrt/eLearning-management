@@ -1,424 +1,317 @@
-# eLearning Management System - Aspire Deployment Guide
+# Deployment Guide
 
 ## Overview
 
-This guide explains how to deploy the eLearning Management System using .NET Aspire with Docker containers.
+The eLearning Management System is a .NET 10 microservices application. It has two deployment modes:
+
+- **Development** — .NET Aspire orchestrates all services locally with automatic service discovery, OpenTelemetry, and a built-in dashboard
+- **Production** — Docker Compose (or Kubernetes) runs each service as an independent container; Aspire is not used
 
 ## Architecture
 
-The system consists of the following microservices:
-
-1. **Course Management Service** - Manages courses, modules, and enrollments
-2. **User Management Service** - Handles user authentication and profile management
-3. **Instructor Service** - Manages instructor-specific features and dashboards
-4. **Discount gRPC Service** - Provides discount calculation via gRPC
-5. **Web Application** - ASP.NET Core web frontend
-6. **PostgreSQL Database** - Data persistence layer
-7. **Redis Cache** - In-memory caching
+```
+Internet
+    │
+    ▼
+lms.web (ASP.NET Core MVC)
+    │
+    ├── coursemanagement  (REST, port 8080)  → PostgreSQL (coursedb)
+    ├── usermanagement    (REST, port 8081)  → PostgreSQL (userdb)
+    └── discountgrpc      (gRPC, port 8083)  → SQLite
+    
+Infrastructure:
+    PostgreSQL 18        (port 5432)
+    Redis 7              (port 6379)
+    pgAdmin              (port 5050)
+```
 
 ## Prerequisites
 
-- Docker and Docker Compose installed
-- .NET 10 SDK (for development)
+- Docker Desktop 4.x+
+- .NET 10 SDK (for development / Aspire)
 - Git
 
 ## Project Structure
 
 ```
-├── AppHost/                                    # Aspire AppHost project
+eLearning-management/
+├── AppHost/                              # Aspire AppHost — dev only
 │   ├── AppHost.csproj
 │   ├── Program.cs
-│   └── manifest.json
+│   └── Properties/launchSettings.json
 ├── aspire/
-│   └── ServiceDefaults/                        # Shared service defaults
+│   └── ServiceDefaults/                  # Shared defaults library
 │       ├── ServiceDefaults.csproj
 │       └── Extensions.cs
 ├── src/
 │   ├── lms.services/
-│   │   ├── lms.services.coursemanagement/     # Course microservice
-│   │   ├── lms.services.usermanagement/       # User microservice
-│   │   └── lms.services.discount.gRPC/        # Discount gRPC service
-│   ├── lms.services.instructor/               # Instructor microservice
-│   ├── lms.web/                               # Web application
-│   ├── lms.buildingblocks/                    # Common utilities
-│   ├── lms.shared.common/                     # Shared models
-│   └── lms.shared.data/                       # Database contexts
-├── docker-compose.yml                         # Docker Compose configuration
-└── .dockerignore                              # Docker build exclusions
+│   │   ├── lms.services.coursemanagement/
+│   │   │   └── Dockerfile
+│   │   ├── lms.services.usermanagement/
+│   │   │   └── Dockerfile
+│   │   └── lms.services.discount.gRPC/
+│   │       └── Discount.gRPC/
+│   │           └── Dockerfile
+│   ├── lms.web/
+│   │   └── Dockerfile
+│   ├── lms.buildingblocks/
+│   ├── lms.shared.common/
+│   ├── lms.shared.data/
+│   └── lms.services.aws/
+├── docker-compose.yml
+├── .dockerignore
+└── kubernetes-deployment.yaml
 ```
 
-## Quick Start with Docker Compose
+## Development with Aspire
 
-### 1. Build and Run All Services
-
-```bash
-# Navigate to the project root
-cd eLearning-management
-
-# Build and start all services
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop all services
-docker-compose down
-
-# Remove volumes (clean database)
-docker-compose down -v
-```
-
-### 2. Access Services
-
-After running `docker-compose up`, the services are available at:
-
-- **Web Application**: http://localhost:5173
-- **Course Management API**: http://localhost:8080
-  - Swagger UI: http://localhost:8080/swagger
-- **User Management API**: http://localhost:8081
-  - Swagger UI: http://localhost:8081/swagger
-- **Instructor Service**: http://localhost:8082
-  - Swagger UI: http://localhost:8082/swagger
-- **Discount gRPC Service**: http://localhost:8083
-- **PgAdmin**: http://localhost:5050
-  - Username: admin@example.com
-  - Password: admin
-- **Redis**: localhost:6379
-
-### 3. Database Access via PgAdmin
-
-1. Go to http://localhost:5050
-2. Login with credentials above
-3. Create a server connection:
-   - Hostname: `postgres`
-   - Username: `postgres`
-   - Password: `postgres`
-4. Create databases: `coursedb`, `userdb`, `instructordb`
-
-## Development with Aspire (Running from Source)
-
-### 1. Prerequisites
-
-- Visual Studio 2022 or VS Code with C# extension
-- .NET 10 SDK
-
-### 2. Run Aspire AppHost
+Aspire handles service discovery, environment variable injection, container lifecycle (Redis), OpenTelemetry, and the monitoring dashboard.
 
 ```bash
-# Navigate to AppHost directory
 cd AppHost
-
-# Run the AppHost
-dotnet run
-
-# This will:
-# 1. Start all services in debug mode
-# 2. Launch the Aspire Dashboard at http://localhost:4317
-# 3. Provide real-time monitoring of all services
+dotnet run --launch-profile https
 ```
 
-### 3. Aspire Dashboard Features
+Dashboard: `https://localhost:15889`
 
-- Real-time service monitoring
-- Logs aggregation
-- Metrics visualization
-- Service endpoint access
-- Health checks
-- Performance diagnostics
+Aspire injects `services__<name>__https__0` and `services__<name>__http__0` environment variables into each service so they can find each other without hardcoded URLs.
 
-## Production Deployment
+### How service URLs are resolved
 
-### Using the Manifest File
+In `AppHost/Program.cs`:
+```csharp
+var courseManagementService = builder.AddProject<Projects.lms_services_coursemanagement>("coursemanagement", launchProfileName: "https");
 
-The `AppHost/manifest.json` file contains the complete configuration for production deployment:
+builder.AddProject<Projects.lms_web>("web", launchProfileName: "https")
+    .WithReference(courseManagementService);   // injects services__coursemanagement__https__0
+```
+
+In `lms.web/Services/UserManagementService.cs` the service reads:
+```csharp
+config["services__usermanagement__https__0"] ??
+config["services__usermanagement__http__0"] ??
+config["MicroServices:UserManagementUrl"]
+```
+
+## Docker Compose Deployment
+
+All Dockerfiles are built from the **repo root** context so they can reach `aspire/ServiceDefaults/`.
 
 ```bash
-# Generate manifest for container orchestration
-dotnet publish AppHost --no-build -o ./publish
+# Build all images and start
+docker compose up --build
 
-# The manifest can be deployed to:
-# - Kubernetes (via Aspire to K8s converter)
-# - Azure Container Instances
-# - Docker Swarm
-# - Other orchestration platforms
+# Start without rebuilding
+docker compose up
+
+# Start in background
+docker compose up -d
+
+# Stop
+docker compose down
+
+# Stop and delete volumes (resets databases)
+docker compose down -v
 ```
 
-### Docker Compose Production Configuration
+### Service endpoints
 
-For production, modify `docker-compose.yml`:
+| Service | Host Port | Container Port | URL |
+|---|---|---|---|
+| coursemanagement | 8080 | 8080 | http://localhost:8080/swagger |
+| usermanagement | 8081 | 8080 | http://localhost:8081/swagger |
+| discountgrpc | 8083 | 8080 | http://localhost:8083 |
+| web | 5173 | 8080 | http://localhost:5173 |
+| postgres | 5432 | 5432 | localhost:5432 |
+| redis | 6379 | 6379 | localhost:6379 |
+| pgadmin | 5050 | 80 | http://localhost:5050 |
 
-1. **Change environment variables**:
-   ```yaml
-   ASPNETCORE_ENVIRONMENT: Production
-   ```
+### Service discovery in Docker Compose
 
-2. **Configure external services** (replace with production URLs):
-   - AWS S3 endpoints
-   - AWS SQS endpoints
-   - External databases
-   - CDN configurations
+Since Aspire is not running, service URLs are set as environment variables in `docker-compose.yml`:
 
-3. **Add resource limits**:
-   ```yaml
-   services:
-     coursemanagement:
-       deploy:
-         resources:
-           limits:
-             cpus: '1'
-             memory: 512M
-   ```
+```yaml
+web:
+  environment:
+    - services__usermanagement__http__0=http://usermanagement:8080
+    - services__coursemanagement__http__0=http://coursemanagement:8080
+    - services__discountgrpc__http__0=http://discountgrpc:8080
+```
 
-4. **Configure persistent volumes** for databases:
-   ```yaml
-   volumes:
-     postgres_data:
-       driver: local
-       driver_opts:
-         type: nfs
-   ```
+These match exactly what the services read in code (the same `services__*__http__0` keys that Aspire injects during development).
+
+### Database setup
+
+PostgreSQL databases are created automatically by EF Core migrations on first run. To create them manually via pgAdmin:
+
+1. Open http://localhost:5050
+2. Login: `admin@example.com` / `admin`
+3. Connect to server: host=`postgres`, user=`postgres`, password=`postgres`
+4. Create databases: `coursedb`, `userdb`
+
+Or via CLI:
+```bash
+docker compose exec postgres psql -U postgres -c "CREATE DATABASE coursedb;"
+docker compose exec postgres psql -U postgres -c "CREATE DATABASE userdb;"
+```
+
+## Building Individual Docker Images
+
+All Dockerfiles must be run from the **repo root** as build context:
+
+```bash
+# Course Management
+docker build -f src/lms.services/lms.services.coursemanagement/Dockerfile -t lms-coursemanagement:latest .
+
+# User Management
+docker build -f src/lms.services/lms.services.usermanagement/Dockerfile -t lms-usermanagement:latest .
+
+# Discount gRPC
+docker build -f src/lms.services/lms.services.discount.gRPC/Discount.gRPC/Dockerfile -t lms-discountgrpc:latest .
+
+# Web
+docker build -f src/lms.web/Dockerfile -t lms-web:latest .
+```
 
 ## Kubernetes Deployment
 
-### 1. Convert Aspire Manifest to Kubernetes
-
 ```bash
-# Using Aspire CLI (if available)
-dotnet publish AppHost --no-build -o ./kube -p PublishProfile=k8s
+# Apply full manifest
+kubectl apply -f kubernetes-deployment.yaml
 
-# Or manually create Kubernetes manifests from the Aspire resources
-```
-
-### 2. Deploy to Kubernetes
-
-```bash
-# Create namespace
-kubectl create namespace lms
-
-# Deploy services
-kubectl apply -f kubernetes/
-
-# Check deployment status
+# Check status
 kubectl get pods -n lms
 kubectl get svc -n lms
 
 # View logs
 kubectl logs -n lms deployment/coursemanagement
+
+# Port-forward web app locally
+kubectl port-forward -n lms svc/web 5173:80
 ```
 
-### 3. Sample Kubernetes Service Configuration
+Update image names in `kubernetes-deployment.yaml` before applying:
+```yaml
+image: your-registry.azurecr.io/lms/coursemanagement:latest
+```
+
+## Environment Variables Reference
+
+### All services
+
+| Variable | Description |
+|---|---|
+| `ASPNETCORE_ENVIRONMENT` | `Development` or `Production` |
+| `ASPNETCORE_URLS` | e.g. `http://+:8080` |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | OTLP collector endpoint (optional) |
+
+### Course Management
+
+| Variable | Example |
+|---|---|
+| `ConnectionStrings__CourseDatabase` | `Server=postgres;Port=5432;Database=coursedb;User Id=postgres;Password=postgres;` |
+| `ConnectionStrings__Redis` | `redis:6379` |
+
+### User Management
+
+| Variable | Example |
+|---|---|
+| `ConnectionStrings__UserDatabase` | `Server=postgres;Port=5432;Database=userdb;User Id=postgres;Password=postgres;` |
+| `ConnectionStrings__Redis` | `redis:6379` |
+
+### Web App
+
+| Variable | Example |
+|---|---|
+| `services__coursemanagement__http__0` | `http://coursemanagement:8080` |
+| `services__usermanagement__http__0` | `http://usermanagement:8080` |
+| `services__discountgrpc__http__0` | `http://discountgrpc:8080` |
+
+## Monitoring and Telemetry
+
+### Development (Aspire Dashboard)
+
+The Aspire Dashboard at `https://localhost:15889` provides:
+- Structured logs from all services
+- Distributed traces (request flows across services)
+- Metrics (CPU, memory, request counts, latency)
+- Health status
+
+OpenTelemetry is wired up via `ServiceDefaults/Extensions.cs`. The `AddServiceDefaults()` call in each service's `Program.cs` enables it automatically when the `OTEL_EXPORTER_OTLP_ENDPOINT` env var is set (Aspire sets this).
+
+### Production (OTEL Collector)
+
+Add an OpenTelemetry Collector to `docker-compose.yml` and set on each service:
 
 ```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: coursemanagement
-  namespace: lms
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: coursemanagement
-  template:
-    metadata:
-      labels:
-        app: coursemanagement
-    spec:
-      containers:
-      - name: coursemanagement
-        image: your-registry/lms-coursemanagement:latest
-        ports:
-        - containerPort: 80
-        env:
-        - name: ConnectionStrings__CourseDatabase
-          valueFrom:
-            secretKeyRef:
-              name: db-secrets
-              key: course-connection-string
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "250m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 80
-          initialDelaySeconds: 30
-          periodSeconds: 10
+environment:
+  - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcollector:4317
 ```
 
-## Environment Configuration
-
-### Development Environment
-
-Set these in `appsettings.Development.json`:
-
-```json
-{
-  "ConnectionStrings": {
-    "CourseDatabase": "Server=localhost;Port=5432;Database=coursedb;User Id=postgres;Password=postgres;"
-  },
-  "Logging": {
-    "LogLevel": {
-      "Default": "Debug"
-    }
-  }
-}
-```
-
-### Production Environment
-
-Use environment variables or Azure Key Vault:
-
-```bash
-# Set connection string
-export ConnectionStrings__CourseDatabase="Server=prod-db.postgres.database.azure.com;Database=coursedb;User Id=admin;Password=xxxxx;"
-
-# Set Aspire environment
-export ASPNETCORE_ENVIRONMENT="Production"
-```
-
-## Monitoring and Logging
-
-### Aspire Dashboard
-
-The AppHost provides built-in monitoring:
-
-1. **Metrics**: CPU, memory, request latency
-2. **Logs**: Centralized logging from all services
-3. **Traces**: Distributed tracing
-4. **Health**: Service health status
-
-### External Monitoring (Serilog)
-
-Services use Serilog for structured logging:
-
-```json
-{
-  "Serilog": {
-    "MinimumLevel": "Information",
-    "WriteTo": [
-      {
-        "Name": "Console"
-      },
-      {
-        "Name": "File",
-        "Args": {
-          "path": "logs/lms-.txt",
-          "rollingInterval": "Day"
-        }
-      }
-    ]
-  }
-}
-```
+`ServiceDefaults` already checks for this env var and activates the OTLP exporter automatically.
 
 ## Scaling
 
-### Horizontal Scaling with Docker Compose
-
 ```bash
-# Scale course management to 3 instances
-docker-compose up -d --scale coursemanagement=3
-
-# Use a load balancer (Nginx) to distribute traffic
+# Scale course management to 3 replicas
+docker compose up -d --scale coursemanagement=3
 ```
 
-### Load Balancing Example (Nginx)
-
-```nginx
-upstream coursemanagement {
-  server coursemanagement:80;
-  server coursemanagement-1:80;
-  server coursemanagement-2:80;
-}
-
-server {
-  listen 8080;
-  location / {
-    proxy_pass http://coursemanagement;
-  }
-}
-```
-
-## Health Checks
-
-All services expose a `/health` endpoint:
-
-```bash
-# Check service health
-curl http://localhost:8080/health
-
-# Response:
-{
-  "status": "Healthy",
-  "checks": {
-    "database": "Healthy"
-  }
-}
-```
+For Kubernetes, configure HPA (Horizontal Pod Autoscaler) targeting CPU utilization.
 
 ## Troubleshooting
 
-### Common Issues
-
-1. **Port Already in Use**
-   ```bash
-   # Change port in docker-compose.yml
-   ports:
-     - "8090:80"  # Map to different host port
-   ```
-
-2. **Database Connection Errors**
-   ```bash
-   # Check if PostgreSQL is running
-   docker-compose logs postgres
-
-   # Verify connection string
-   docker-compose exec coursemanagement env | grep ConnectionStrings
-   ```
-
-3. **Services Can't Connect to Each Other**
-   ```bash
-   # Verify network
-   docker network ls
-   docker network inspect <network-name>
-
-   # Test connectivity
-   docker-compose exec coursemanagement ping usermanagement
-   ```
-
-4. **Volume Permission Issues**
-   ```bash
-   # Fix permissions
-   sudo chown -R 999:999 postgres_data/
-   ```
-
-## Cleanup
-
+### Port already in use
 ```bash
-# Remove all containers, networks, and volumes
-docker-compose down -v
+# Find the process (Windows)
+netstat -ano | findstr :8080
 
-# Remove unused Docker resources
-docker system prune -a
+# Kill it
+taskkill /PID <pid> /F
 ```
 
-## Next Steps
+### Service can't reach another service
+```bash
+# Check Docker network
+docker network ls
+docker compose exec web ping coursemanagement
 
-1. Configure AWS services (S3, SQS) for production
-2. Set up SSL/TLS certificates
-3. Configure CI/CD pipeline
-4. Set up monitoring and alerting
-5. Implement backup strategies
-6. Configure auto-scaling policies
+# Verify env vars are set
+docker compose exec web env | grep services__
+```
 
-## Additional Resources
+### Database connection fails
+```bash
+# Check postgres is healthy
+docker compose ps postgres
+docker compose logs postgres
 
-- [.NET Aspire Documentation](https://learn.microsoft.com/en-us/dotnet/aspire/)
-- [Docker Compose Documentation](https://docs.docker.com/compose/)
-- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
-- [Redis Documentation](https://redis.io/documentation)
+# Verify connection string in container
+docker compose exec coursemanagement env | grep ConnectionStrings
+```
+
+### Proto file not found (gRPC build error on Linux)
+This happens due to case-sensitivity: `Protos\discount.proto` vs `Protos\Discount.proto`. The `.csproj` must match the exact filename case. Fixed in `Discount.gRPC.csproj` to use `Protos\Discount.proto`.
+
+### Docker build context errors (missing shared projects)
+All Dockerfiles use `.` (repo root) as build context. If you build a Dockerfile directly, always run from the repo root:
+```bash
+docker build -f src/lms.services/lms.services.coursemanagement/Dockerfile .
+```
+
+### Out of disk space
+```bash
+docker system prune -a --volumes
+```
+
+## Production Checklist
+
+- [ ] Change all default passwords (PostgreSQL, pgAdmin)
+- [ ] Use secrets management (Kubernetes Secrets, Azure Key Vault, or Docker secrets)
+- [ ] Set `ASPNETCORE_ENVIRONMENT=Production`
+- [ ] Configure TLS termination at load balancer or Nginx
+- [ ] Set resource limits in docker-compose or Kubernetes manifests
+- [ ] Configure backup strategy for PostgreSQL volumes
+- [ ] Point `OTEL_EXPORTER_OTLP_ENDPOINT` to a collector (Prometheus, Grafana, Seq, etc.)
+- [ ] Update image registry URLs in kubernetes-deployment.yaml
+- [ ] Configure CI/CD pipeline (.github/workflows/docker-build.yml)

@@ -1,173 +1,126 @@
 ==============================================================================
-ASPIRE DEPLOYMENT SETUP - CHANGES SUMMARY
+ELEARNING MANAGEMENT SYSTEM - CHANGES SUMMARY
 ==============================================================================
 
-DATE: April 11, 2026
-COMPLETED: All microservices and web app configured for Docker deployment with Aspire
+Last updated: April 12, 2026
 
 ==============================================================================
-FILES CREATED
+CURRENT STATE
 ==============================================================================
 
-1. ASPIRE CORE
-   ✓ AppHost/AppHost.csproj
-   ✓ AppHost/Program.cs
-   ✓ AppHost/manifest.json
-   ✓ aspire/ServiceDefaults/ServiceDefaults.csproj
-   ✓ aspire/ServiceDefaults/Extensions.cs
-
-2. DOCKER CONFIGURATION
-   ✓ docker-compose.yml
-   ✓ .dockerignore
-   ✓ src/lms.services/lms.services.coursemanagement/Dockerfile.new
-
-3. KUBERNETES DEPLOYMENT
-   ✓ kubernetes-deployment.yaml
-
-4. CI/CD PIPELINE
-   ✓ .github/workflows/docker-build.yml
-
-5. DOCUMENTATION
-   ✓ DEPLOYMENT_GUIDE.md (Comprehensive deployment guide)
-   ✓ ASPIRE_SETUP_SUMMARY.md (Technical setup details)
-   ✓ QUICK_START.md (Quick reference for developers)
-   ✓ CHANGES_SUMMARY.txt (This file)
+Runtime:        .NET 10
+Aspire:         13.2.2 (Aspire.AppHost.Sdk)
+Docker images:  dotnet/aspnet:10.0, dotnet/sdk:10.0
+PostgreSQL:     18.1-alpine
+Redis:          7-alpine
 
 ==============================================================================
-FILES MODIFIED
+ASPIRE CONFIGURATION
 ==============================================================================
 
-1. src/lms.sln
-   - Added aspire folder project group
-   - Added ServiceDefaults project reference
-   - Added AppHost project reference
-   - Added proper project nesting and configurations
+AppHost/AppHost.csproj
+  - Uses <Sdk Name="Aspire.AppHost.Sdk" Version="13.2.2" />
+  - All ProjectReferences have IsAspireProjectResource="true"
+  - Packages: Aspire.Hosting, Aspire.Hosting.AppHost, Aspire.Hosting.PostgreSQL,
+              Aspire.Hosting.Redis
+
+AppHost/Program.cs
+  - Registers: redis, coursemanagement, usermanagement, web
+  - Uses launchProfileName: "https" on AddProject<T>()
+  - Uses WithReference() for service discovery injection
+
+AppHost/Properties/launchSettings.json
+  - https profile: dashboard at https://localhost:15889
+  - DOTNET_DASHBOARD_OTLP_ENDPOINT_URL: https://localhost:16175
+  - DOTNET_RESOURCE_SERVICE_ENDPOINT_URL: https://localhost:17013
+
+aspire/ServiceDefaults/ServiceDefaults.csproj
+  - IsAspireSharedProject=true
+  - OpenTelemetry packages (Hosting, OTLP, AspNetCore, Http, Runtime) v1.14.0
+  - Microsoft.Extensions.Http.Resilience 9.4.0
+  - Microsoft.Extensions.ServiceDiscovery 9.4.0
+
+aspire/ServiceDefaults/Extensions.cs
+  - AddServiceDefaults(): OpenTelemetry + health checks + service discovery
+  - MapDefaultEndpoints(): /health and /alive endpoints
 
 ==============================================================================
-SERVICES CONFIGURED
+DOCKER CONFIGURATION
 ==============================================================================
 
-1. PostgreSQL 16 - Persistent database
-   Databases: coursedb, userdb, instructordb
-   Port: 5432
-   Access: username=postgres, password=postgres
+All Dockerfiles rebuilt to:
+  - Use dotnet/aspnet:10.0 and dotnet/sdk:10.0
+  - Be built from repo root context (so aspire/ServiceDefaults/ is reachable)
+  - Use ASPNETCORE_URLS=http://+:8080 (port 8080 consistently)
 
-2. PgAdmin 4 - Database administration
-   Port: 5050
-   Access: admin@example.com / admin
+Dockerfiles:
+  src/lms.services/lms.services.coursemanagement/Dockerfile
+  src/lms.services/lms.services.usermanagement/Dockerfile
+  src/lms.services/lms.services.discount.gRPC/Discount.gRPC/Dockerfile
+  src/lms.web/Dockerfile
 
-3. Redis 7 - Caching layer
-   Port: 6379
-
-4. Course Management Service
-   Port: 8080
-   Swagger UI: http://localhost:8080/swagger
-   Health: http://localhost:8080/health
-
-5. User Management Service
-   Port: 8081
-   Swagger UI: http://localhost:8081/swagger
-   Health: http://localhost:8081/health
-
-6. Instructor Service
-   Port: 8082
-   Swagger UI: http://localhost:8082/swagger
-   Health: http://localhost:8082/health
-
-7. Discount gRPC Service
-   Port: 8083
-   gRPC endpoint available
-
-8. Web Application
-   Port: 5173
-   Health: http://localhost:5173/health
+docker-compose.yml
+  - Builds from repo root context (. not src/)
+  - Container port 8080 for all .NET services
+  - Host ports: coursemanagement=8080, usermanagement=8081, discountgrpc=8083, web=5173
+  - web service uses services__*__http__0 env var format (matches code)
+  - instructor service removed (Dockerfile/path does not exist yet)
+  - PostgreSQL image updated to 18.1-alpine
 
 ==============================================================================
-KEY FEATURES IMPLEMENTED
+BUG FIXES APPLIED
 ==============================================================================
 
-✓ Multi-stage Docker builds for optimized images
-✓ Service discovery and auto-registration
-✓ Health checks (liveness and readiness probes)
-✓ Persistent volumes for databases and cache
-✓ Isolated Docker network for secure communication
-✓ Environment-based configuration (Development/Production)
-✓ Complete Kubernetes manifests with StatefulSets and Deployments
-✓ GitHub Actions CI/CD workflow for automated builds
-✓ Aspire Dashboard for monitoring and management
-✓ Comprehensive documentation with troubleshooting guides
+1. Proto case-sensitivity (Linux Docker build failure)
+   File: src/lms.services/lms.services.discount.gRPC/Discount.gRPC/Discount.gRPC.csproj
+   Change: Protos\discount.proto → Protos\Discount.proto
+   Reason: Linux filesystem is case-sensitive; file on disk is Discount.proto
+
+2. Swashbuckle + Microsoft.OpenApi version conflict (Swagger 500 error)
+   Removed explicit Microsoft.OpenApi 3.5.1 pin from lms.buildingblocks.csproj
+   Swashbuckle 10.1.7 requires Microsoft.OpenApi 2.4.1 (ABI incompatible with 3.5.1)
+
+3. Aspire workload deprecation (NETSDK1228)
+   Replaced IsAspireHost=true with <Sdk Name="Aspire.AppHost.Sdk" Version="13.2.2" />
+
+4. CS0234 - Projects.* types not generated
+   Added IsAspireProjectResource="true" on all ProjectReferences in AppHost
+
+5. Runtime: Endpoint with name 'http' already exists
+   Removed all WithHttpEndpoint() calls from AppHost Program.cs
+
+6. Service discovery URL format
+   Web app reads services__usermanagement__https__0 / services__usermanagement__http__0
+   (Aspire-injected format), not MicroServices:UserManagementUrl
 
 ==============================================================================
-QUICK START COMMANDS
+SERVICES IN DOCKER COMPOSE
 ==============================================================================
 
-USING DOCKER COMPOSE:
-  docker-compose up -d          # Start all services
-  docker-compose logs -f        # View logs
-  docker-compose down           # Stop services
-
-USING ASPIRE (Development):
-  cd AppHost
-  dotnet run                    # Start Aspire Dashboard
-
-ACCESS SERVICES:
-  Web App:              http://localhost:5173
-  Course API:           http://localhost:8080/swagger
-  User API:             http://localhost:8081/swagger
-  Instructor API:       http://localhost:8082/swagger
-  PgAdmin:              http://localhost:5050
-  Aspire Dashboard:     http://localhost:4317
-
-KUBERNETES:
-  kubectl apply -f kubernetes-deployment.yaml
-  kubectl get pods -n lms
+postgres         - PostgreSQL 18.1, port 5432
+pgadmin          - pgAdmin 4, port 5050
+redis            - Redis 7, port 6379
+coursemanagement - .NET 10 REST API, host port 8080
+usermanagement   - .NET 10 REST API, host port 8081
+discountgrpc     - .NET 10 gRPC, host port 8083
+web              - .NET 10 MVC, host port 5173
 
 ==============================================================================
-DOCUMENTATION PROVIDED
+QUICK REFERENCE
 ==============================================================================
 
-1. DEPLOYMENT_GUIDE.md
-   - Complete deployment instructions
-   - Architecture overview
-   - Development and production setups
-   - Kubernetes configuration
-   - Monitoring and logging
-   - Troubleshooting guide
+Start with Aspire:
+  cd AppHost && dotnet run --launch-profile https
+  Dashboard: https://localhost:15889
 
-2. ASPIRE_SETUP_SUMMARY.md
-   - Technical implementation details
-   - File descriptions
-   - Architecture diagrams
-   - Next steps checklist
+Start with Docker:
+  docker compose up --build
 
-3. QUICK_START.md
-   - Developer quick reference
-   - Common commands
-   - Database management
-   - API testing
-   - Debugging tips
+Stop Docker:
+  docker compose down
+  docker compose down -v   (removes database volumes)
 
-==============================================================================
-NEXT STEPS
-==============================================================================
-
-1. Test with Docker Compose:
-   docker-compose up -d
-
-2. Verify all services are running:
-   docker-compose ps
-
-3. Access web app:
-   http://localhost:5173
-
-4. Review DEPLOYMENT_GUIDE.md for detailed instructions
-
-5. Configure production settings as needed
-
-==============================================================================
-
-Your eLearning Management System is now ready for Docker and Kubernetes deployment!
-
-Refer to DEPLOYMENT_GUIDE.md for comprehensive instructions.
+Build a single service:
+  docker compose build --no-cache coursemanagement
 
 ==============================================================================
